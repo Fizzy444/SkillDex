@@ -1,0 +1,78 @@
+Name: Rahul Sharma
+Email: rahul.sharma@example.com
+
+Phone: +91-9876543210
+Location: Bangalore, India
+LinkedIn: linkedin.com/in/rahulsharma
+GitHub: github.com/rahulsharma
+
+🎯 Career Objective
+
+Motivated Computer Science graduate seeking an entry-level position as a Junior Software Developer, where I can apply my programming skills, problem-solving abilities, and eagerness to learn to contribute to innovative projects and grow with the organization.
+
+🎓 Education
+
+Bachelor of Technology (B.Tech) in Computer Science
+XYZ Institute of Technology, Bangalore
+2019 – 2023 | CGPA: 8.2/10
+
+💻 Technical Skills
+
+Programming Languages: C, C++, Python, Java
+
+Web Technologies: HTML, CSS, JavaScript, React
+
+Databases: MySQL, MongoDB
+
+Tools & Platforms: Git, VS Code, Eclipse
+
+📂 Academic Projects
+
+1. Online Food Delivery Website
+
+Developed a responsive website using HTML, CSS, and JavaScript.
+
+Integrated order placement, cart management, and basic admin dashboard.
+
+2. Student Result Management System
+
+Built using Python and MySQL.
+
+Allowed faculty to enter results and students to view reports securely.
+
+🏆 Internships & Training
+
+Web Development Intern – ABC Tech Solutions (May – July 2022)
+
+Assisted in developing frontend modules using React.
+
+Learned version control with GitHub and basic Agile practices.
+
+⭐ Achievements
+
+Won 2nd place in a Hackathon at college (2022).
+
+Completed “Python for Everybody” specialization on Coursera.
+
+🤝 Extra-Curricular Activities
+
+Member, Coding Club – Organized coding competitions.
+
+Volunteered in technical fest event management.
+
+📌 Strengths
+
+Quick learner and adaptive.
+
+Strong problem-solving and debugging skills.
+
+Good communication and teamwork.
+
+
+
+
+
+🏢 Job Title: Junior Software Developer (Fresher)
+📋 Job Description:
+
+We are seeking a highly motivated and enthusiastic fresher to join our development team as a Junior Software Developer. The ideal candidate will have a strong foundation in programming, problem-solving skills, and a willingness to learn new technologies.

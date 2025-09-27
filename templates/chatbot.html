@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resume Assistant</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            background: white;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+        }
+
+        .chat-header-info {
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .messages-container {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #f8fafc;
+            min-height: 0;
+        }
+
+        .message {
+            margin-bottom: 25px;
+            display: flex;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 18px 24px;
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .bot-message .message-content {
+            background: white;
+            color: #374151;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-message .message-content {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        .bot-message .message-time {
+            text-align: left;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            margin: 10px 30px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+            align-items: center;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .input-area {
+            padding: 20px 30px 30px 30px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        .textarea-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .input-area textarea {
+            width: 100%;
+            min-height: 52px;
+            max-height: 200px;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            resize: none;
+            transition: all 0.3s ease;
+            line-height: 1.4;
+            overflow-y: auto;
+        }
+
+        .input-area textarea:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .input-area textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 52px;
+            height: 52px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+            flex-shrink: 0;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .image-upload-btn {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            width: 52px;
+            height: 52px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: #64748b;
+            flex-shrink: 0;
+        }
+
+        .image-upload-btn:hover {
+            background: #4facfe;
+            color: white;
+            border-color: #4facfe;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .uploaded-image {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .processing-indicator {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin: 15px 30px;
+            display: none;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .processing-indicator.active {
+            display: block;
+        }
+
+        /* Markdown styling */
+        .message-content h1,
+        .message-content h2,
+        .message-content h3,
+        .message-content h4,
+        .message-content h5,
+        .message-content h6 {
+            margin: 15px 0 10px 0;
+            font-weight: 600;
+        }
+
+        .message-content h1 { font-size: 1.5em; }
+        .message-content h2 { font-size: 1.3em; }
+        .message-content h3 { font-size: 1.1em; }
+
+        .message-content ul,
+        .message-content ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 5px 0;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #4facfe;
+            padding-left: 15px;
+            margin: 15px 0;
+            font-style: italic;
+            background: rgba(79, 172, 254, 0.05);
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+
+        .message-content code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+
+        .message-content pre {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+        }
+
+        .message-content em {
+            font-style: italic;
+        }
+
+        .message-content a {
+            color: #4facfe;
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .message-content th,
+        .message-content td {
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+
+        .streaming-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: #4facfe;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* Scrollbar styling */
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .input-area textarea::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .input-area textarea::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .input-area textarea::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-header {
+                padding: 15px 20px;
+            }
+
+            .chat-header h2 {
+                font-size: 24px;
+            }
+
+            .messages-container {
+                padding: 20px;
+            }
+
+            .input-area {
+                padding: 15px 20px 20px 20px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .typing-indicator {
+                margin: 10px 20px;
+            }
+
+            .processing-indicator {
+                margin: 15px 20px;
+            }
+        }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <h2>Resume Assistant</h2>
+        <p><span class="status-dot"></span>Online • Ready to help</p>
+      </div>
+    </div>
+
+    <div class="messages-container" id="messages">
+      <div class="message bot-message">
+        <div class="message-content">
+          <p>Hello! I'm your resume assistant. I can help you with information about skills, experience, education, projects, and career goals. What would you like to know?</p>
+          <div class="message-time">Just now</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="processing-indicator" id="processingIndicator">🔍 Analyzing image... Please wait</div>
+
+    <div class="input-area">
+      <label for="imageInput" class="image-upload-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21,15 16,10 5,21"/>
+        </svg>
+      </label>
+      <input type="file" id="imageInput" accept="image/*" style="display:none"/>
+      <div class="textarea-container">
+        <textarea id="userInput" placeholder="Ask me about my experience, skills, education... or upload an image" rows="1"></textarea>
+      </div>
+      <button class="send-button" id="sendButton">➤</button>
+    </div>
+  </div>
+
+  <script>
+    const messagesContainer = document.getElementById('messages');
+    const userInput = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const imageInput = document.getElementById('imageInput');
+    const processingIndicator = document.getElementById('processingIndicator');
+
+    let sessionId = 'session_' + Date.now();
+
+    // Get current mode from URL parameters or sessionStorage
+    function getCurrentMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const modeFromURL = urlParams.get('mode');
+        if (modeFromURL) {
+            sessionStorage.setItem("chatMode", modeFromURL);
+            console.log("DEBUG: Mode set from URL:", modeFromURL);
+            return modeFromURL;
+        }
+        const modeFromStorage = sessionStorage.getItem("chatMode");
+        console.log("DEBUG: Mode from storage:", modeFromStorage);
+        return modeFromStorage;
+    }
+
+    // Initialize mode on page load
+    const currentMode = getCurrentMode();
+    console.log("DEBUG: Current mode on page load:", currentMode);
+
+    // Update header based on mode
+    function updateHeaderForMode(mode) {
+        const headerTitle = document.querySelector('.chat-header h2');
+        const headerSubtitle = document.querySelector('.chat-header p');
+        
+        switch(mode) {
+            case 'urgent':
+                headerTitle.textContent = 'Urgent Task Assistant';
+                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready for urgent tasks';
+                break;
+            case 'resume':
+                headerTitle.textContent = 'Resume Assistant';
+                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready to analyze resumes';
+                break;
+            case 'interview':
+                headerTitle.textContent = 'Interview Coach';
+                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready for interview practice';
+                break;
+            default:
+                headerTitle.textContent = 'Resume Assistant';
+                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready to help';
+        }
+    }
+
+    // Update initial message based on mode
+    function updateInitialMessage(mode) {
+        const initialMessage = document.querySelector('.bot-message .message-content p');
+        
+        switch(mode) {
+            case 'urgent':
+                initialMessage.textContent = 'Hello! I\'m your urgent task assistant. I can help you prioritize and tackle your most pressing tasks. What urgent matter can I help you with?';
+                break;
+            case 'resume':
+                initialMessage.textContent = 'Hello! I\'m your resume assistant. I can help you with information about skills, experience, education, projects, and career goals. Upload your resume or ask me anything!';
+                break;
+            case 'interview':
+                initialMessage.textContent = 'Hello! I\'m your interview coach. I can help you practice common interview questions, improve your answers, and boost your confidence. Ready to practice?';
+                break;
+            default:
+                initialMessage.textContent = 'Hello! I\'m your resume assistant. I can help you with information about skills, experience, education, projects, and career goals. What would you like to know?';
+        }
+    }
+
+    // Initialize UI based on mode
+    if (currentMode) {
+        updateHeaderForMode(currentMode);
+        updateInitialMessage(currentMode);
+    }
+
+    // Auto-resize textarea
+    function autoResizeTextarea() {
+      userInput.style.height = '52px';
+      const scrollHeight = userInput.scrollHeight;
+      const maxHeight = 200;
+      userInput.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+      
+      // Update send button state
+      const hasText = userInput.value.trim().length > 0;
+      sendButton.disabled = !hasText && !imageInput.files[0];
+    }
+
+    // Initialize textarea
+    userInput.addEventListener('input', autoResizeTextarea);
+    userInput.addEventListener('paste', () => {
+      setTimeout(autoResizeTextarea, 10);
+    });
+
+    // Handle Enter key behavior
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) {
+          // Shift+Enter = new line (default behavior)
+          return;
+        } else {
+          // Enter = send message
+          e.preventDefault();
+          sendMessage();
+        }
+      }
+    });
+
+    // Add message
+    function addMessage(content, isUser = false, imageData = null, isStreaming = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+
+      let messageContent = '';
+      if (imageData && isUser) {
+        messageContent = `
+          <div class="uploaded-image">
+            <img src="${imageData}" alt="Uploaded image" class="image-preview">
+            <p>Image uploaded for analysis</p>
+          </div>
+        `;
+      } else {
+        const parsedContent = isUser ? content : marked.parse(content);
+        messageContent = `<div class="message-text">${parsedContent}${isStreaming ? '<span class="streaming-cursor"></span>' : ''}</div>`;
+      }
+
+      messageDiv.innerHTML = `
+        <div class="message-content">
+          ${messageContent}
+          <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+        </div>
+      `;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      if (!isUser && !isStreaming) {
+        messageDiv.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+      return messageDiv;
+    }
+
+    // Update streaming message
+    function updateStreamingMessage(messageElement, content, isComplete = false) {
+      const messageTextDiv = messageElement.querySelector('.message-text');
+      const parsedContent = marked.parse(content);
+      messageTextDiv.innerHTML = `${parsedContent}${isComplete ? '' : '<span class="streaming-cursor"></span>'}`;
+
+      if (isComplete) {
+        messageElement.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Indicators
+    function showProcessing(){ processingIndicator.classList.add('active'); }
+    function hideProcessing(){ processingIndicator.classList.remove('active'); }
+    function showTyping(){ typingIndicator.classList.add('active'); }
+    function hideTyping(){ typingIndicator.classList.remove('active'); }
+
+    async function sendToAPI(message, imageFile = null) {
+      try {
+        const formData = new FormData();
+        formData.append('message', message);
+        formData.append('session_id', sessionId);
+        formData.append('stream', 'true');
+        
+        // ADD MODE TO FORM DATA
+        const mode = getCurrentMode();
+        if (mode) {
+          formData.append('mode', mode);
+          console.log("DEBUG: Sending mode to API:", mode);
+        } else {
+          console.log("DEBUG: No mode found, using default");
+        }
+
+        if (imageFile) {
+          formData.append('image', imageFile);
+          const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/bmp','image/webp'];
+          if (!allowedTypes.includes(imageFile.type.toLowerCase())) {
+            throw new Error(`Unsupported file type: ${imageFile.type}.`);
+          }
+          if (imageFile.size > 16 * 1024 * 1024) {
+            throw new Error('File too large. Max 16MB.');
+          }
+        }
+
+        const response = await fetch('/chat_api', { method: 'POST', body: formData });
+        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let botMessageElement = null, finalResponse = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonData = line.slice(6).trim();
+              if (jsonData === '[DONE]') {
+                if (botMessageElement) updateStreamingMessage(botMessageElement, finalResponse, true);
+                return finalResponse;
+              }
+              try {
+                const data = JSON.parse(jsonData);
+                if (data.accumulated) {
+                  finalResponse = data.accumulated;
+                  if (!botMessageElement) {
+                    botMessageElement = addMessage(finalResponse, false, null, true);
+                  } else {
+                    updateStreamingMessage(botMessageElement, finalResponse, false);
+                  }
+                }
+              } catch(e){ console.warn('Invalid JSON in stream:', jsonData); }
+            }
+          }
+        }
+        return finalResponse || "No complete response received.";
+      } catch (error) {
+        console.error('API Error:', error);
+        addMessage(error.message || "Error processing request.", false);
+        return "";
+      }
+    }
+
+    // Send message
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      const imageFile = imageInput.files[0];
+      if (!message && !imageFile) return;
+
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          addMessage('', true, e.target.result);
+          showProcessing();
+          await sendToAPI(message || "Please analyze this resume image", imageFile);
+          hideProcessing();
+        };
+        reader.readAsDataURL(imageFile);
+        userInput.value = '';
+        imageInput.value = '';
+        autoResizeTextarea();
+        return;
+      }
+
+      if (message) {
+        addMessage(message, true);
+        userInput.value = '';
+        autoResizeTextarea();
+        showTyping();
+        await sendToAPI(message);
+        hideTyping();
+      }
+    }
+
+    // Listeners
+    sendButton.addEventListener('click', sendMessage);
+
+    // Initialize
+    userInput.focus();
+    autoResizeTextarea();
+
+    // Make functions available globally for debugging
+    window.debugModeState = debugModeState;
+    window.getCurrentMode = getCurrentMode;
+  </script>
+</body>
+</html>

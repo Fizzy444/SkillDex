@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SkillDEX</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --accent: #6366f1;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f8fafc;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --card: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: var(--card);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .nav-brand {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--muted);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-outline:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .welcome-section {
+            margin-bottom: 2rem;
+        }
+
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .welcome-content h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-content p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-icon.primary {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Feature Cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .feature-icon.chatbot {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+        }
+
+        .feature-icon.todo {
+            background: linear-gradient(135deg, var(--success), #059669);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .feature-description {
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .feature-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .quick-actions h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            text-decoration: none;
+            color: var(--dark);
+            background: var(--light);
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: white;
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .action-icon {
+            font-size: 1.25rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .welcome-card {
+                padding: 1.5rem;
+            }
+
+            .welcome-content h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .fade-in-up:nth-child(2) { animation-delay: 0.1s; }
+        .fade-in-up:nth-child(3) { animation-delay: 0.2s; }
+        .fade-in-up:nth-child(4) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="nav-brand">
+                🎯 SkillDEX
+            </a>
+            
+            <div class="nav-menu">
+                <a href="{{ url_for('dashboard') }}" class="nav-link active">Dashboard</a>
+                <a href="{{ url_for('chat') }}" class="nav-link">AI Assistant</a>
+                <a href="{{ url_for('to_do') }}" class="nav-link">To-Do</a>
+            </div>
+
+            <div class="user-menu">
+                <div class="user-avatar">
+                    {{ user.username[0].upper() }}
+                </div>
+                <span style="color: var(--dark); font-weight: 500;">{{ user.username }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Welcome Section -->
+        <section class="welcome-section fade-in-up">
+            <div class="welcome-card">
+                <div class="welcome-content">
+                    <h1>Welcome back, {{ user.username }}! 👋</h1>
+                    <p>Ready to boost your career with AI-powered insights and productivity tools?</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Features -->
+        <section class="features-grid">
+            <!-- AI Chatbot Feature -->
+            <div class="feature-card fade-in-up">
+                <div class="feature-header">
+                    <div class="feature-icon chatbot">🤖</div>
+                    <div>
+                        <h3 class="feature-title">AI Career Assistant</h3>
+                    </div>
+                </div>
+                <p class="feature-description">
+                    Get personalized resume analysis, interview practice, and career guidance from our AI-powered assistant. Upload your resume for instant feedback or practice interview questions.
+                </p>
+                <div class="feature-actions">
+                    <a href="{{ url_for('chat') }}" class="btn btn-primary">Start Chat</a>
+                    <a href="{{ url_for('chat') }}?mode=resume" class="btn btn-ghost">Analyze Resume</a>
+                </div>
+            </div>
+
+            <!-- To-Do Feature -->
+            <div class="feature-card fade-in-up">
+                <div class="feature-header">
+                    <div class="feature-icon todo">📋</div>
+                    <div>
+                        <h3 class="feature-title">Career To-Do List</h3>
+                    </div>
+                </div>
+                <p class="feature-description">
+                    Organize your career development tasks, track learning goals, and manage job application deadlines. Stay on top of your professional growth journey.
+                </p>
+                <div class="feature-actions">
+                    <a href="{{ url_for('to_do') }}" class="btn btn-primary">Open To-Do</a>
+                    <a href="{{ url_for('to_do') }}?new=true" class="btn btn-ghost">Add Task</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="quick-actions fade-in-up">
+            <h2>Quick Actions</h2>
+            <div class="actions-grid">
+                <a href="{{ url_for('chat') }}?mode=interview" class="action-btn">
+                    <span class="action-icon">🎙️</span>
+                    <span>Practice Interview</span>
+                </a>
+                <a href="{{ url_for('chat') }}?mode=resume" class="action-btn">
+                    <span class="action-icon">📄</span>
+                    <span>Upload Resume</span>
+                </a>
+                <a href="{{ url_for('chat') }}?filter=urgent" class="action-btn">
+                    <span class="action-icon">⚡</span>
+                    <span>Urgent Tasks</span>
+                </a>
+                <a href="{{ url_for('to_do') }}?new=learning" class="action-btn">
+                    <span class="action-icon">📚</span>
+                    <span>Add Learning Goal</span>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        let currentMode = null; 
+
+        // Check if mode is set in URL parameters when page loads
+        const urlParams = new URLSearchParams(window.location.search);
+        const modeFromURL = urlParams.get('mode');
+        if (modeFromURL) {
+            currentMode = modeFromURL;
+            sessionStorage.setItem("chatMode", modeFromURL);
+            console.log("DEBUG: Mode set from URL:", modeFromURL);
+        } else {
+            // Check if mode is stored in sessionStorage
+            currentMode = sessionStorage.getItem("chatMode");
+            console.log("DEBUG: Mode from sessionStorage:", currentMode);
+        }
+
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const url = new URL(this.href);
+                const mode = url.searchParams.get("mode");
+                if (mode) {
+                    currentMode = mode; 
+                    sessionStorage.setItem("chatMode", mode);
+                    console.log("DEBUG: Mode set from button click:", mode);
+                }
+            });
+        });
+
+        async function sendChatMessage(message, imageFile = null) {
+            const formData = new FormData();
+            formData.append("message", message);
+            formData.append("session_id", "default");
+            
+            // Always include the current mode if available
+            if (currentMode) {
+                formData.append("mode", currentMode);
+                console.log("DEBUG: Sending mode to backend:", currentMode);
+            } else {
+                console.log("DEBUG: No mode set, backend will use default");
+            }
+            
+            if (imageFile) {
+                formData.append("image", imageFile);
+            }
+
+            console.log("DEBUG: FormData contents:");
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+
+            try {
+                const response = await fetch("/chat_api", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log("Chat response:", data);
+                return data;
+            } catch (error) {
+                console.error("Error sending chat message:", error);
+            }
+        }
+
+        // Make sendChatMessage available globally if you need to call it from other scripts
+        window.sendChatMessage = sendChatMessage;
+
+        // Rest of your existing code...
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Loading states for buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (this.href && !this.href.includes('#')) {
+                    this.style.opacity = '0.7';
+                    this.style.pointerEvents = 'none';
+                    
+                    setTimeout(() => {
+                        this.style.opacity = '1';
+                        this.style.pointerEvents = 'auto';
+                    }, 2000);
+                }
+            });
+        });
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+            observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

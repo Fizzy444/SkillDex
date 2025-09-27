@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List - SkillDEX</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Your existing CSS styles remain the same */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .todo-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .task-input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .add-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .add-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .add-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .add-btn.loading::before {
+            content: "⏳ ";
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .task-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+
+        .tasks-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .tasks-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tasks-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .tasks-container::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 18px;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            animation: taskSlideIn 0.3s ease-out;
+        }
+
+        @keyframes taskSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            background: #f8f9fa;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .task-checkbox.checked {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .task-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .task-time {
+            font-size: 12px;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .delete-btn:hover {
+            background: #fecaca;
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #d1d5db;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        .priority-indicator {
+            width: 4px;
+            height: 100%;
+            border-radius: 2px;
+            margin-right: 5px;
+        }
+
+        .priority-high { background: #ef4444; }
+        .priority-medium { background: #f59e0b; }
+        .priority-low { background: #10b981; }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            border: 1px solid #fecaca;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            border: 1px solid #bbf7d0;
+        }
+
+        @media (max-width: 640px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .add-btn {
+                justify-content: center;
+            }
+            
+            .filters {
+                justify-content: center;
+            }
+            
+            .task-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-tasks"></i> To-Do List</h1>
+            <p>Stay organized and boost your productivity</p>
+        </div>
+
+        <div class="todo-card">
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <div class="task-input-section">
+                <div class="input-group">
+                    <input type="text" id="taskInput" class="task-input" placeholder="Add a new task..." maxlength="200">
+                    <button class="add-btn" onclick="addTask()" id="addTaskBtn">
+                        <i class="fas fa-plus"></i>
+                        Add Task
+                    </button>
+                </div>
+                
+                <div class="filters">
+                    <button class="filter-btn active" onclick="filterTasks('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterTasks('active', event)">Active</button>
+                    <button class="filter-btn" onclick="filterTasks('completed', event)">Completed</button>
+                </div>
+            </div>
+
+            <div class="task-stats">
+                <div class="stat">
+                    <i class="fas fa-list"></i>
+                    <span>Total: <span id="totalTasks">0</span></span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-clock"></i>
+                    <span>Active: <span id="activeTasks">0</span></span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Completed: <span id="completedTasks">0</span></span>
+                </div>
+            </div>
+
+            <div class="tasks-container" id="tasksContainer">
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>No tasks yet</h3>
+                    <p>Add your first task to get started!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let tasks = [];
+    let currentFilter = 'all';
+    const API_BASE = ""; // Use relative URLs
+    
+    // Utility functions
+    function showMessage(message, type = 'error') {
+        const errorEl = document.getElementById('errorMessage');
+        const successEl = document.getElementById('successMessage');
+
+        if (!errorEl || !successEl) {
+            console.warn("Message elements missing from DOM");
+            return;
+        }
+
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (type === 'success') {
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            setTimeout(() => {
+                successEl.style.display = 'none';
+            }, 3000);
+        } else {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    function setLoading(isLoading, buttonId = 'addTaskBtn') {
+        const button = document.getElementById(buttonId);
+        if (!button) return;
+
+        if (isLoading) {
+            button.classList.add("loading");
+            button.disabled = true;
+            button.innerHTML = '<div class="loading-spinner"></div> Adding...';
+        } else {
+            button.classList.remove("loading");
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-plus"></i> Add Task';
+        }
+    }
+
+    // API functions
+    async function fetchTasks() {
+        try {
+            const response = await fetch('/api/tasks', {
+                credentials: 'same-origin'
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: Failed to fetch tasks`);
+            }
+            
+            const data = await response.json();
+            tasks = data.tasks || [];
+            renderTasks();
+            updateStats();
+        } catch (error) {
+            console.error('Fetch tasks error:', error);
+            showMessage('Error loading tasks: ' + error.message);
+        }
+    }
+
+    async function addTask() {
+        const input = document.getElementById('taskInput');
+        const taskText = input.value.trim();
+        
+        if (!taskText) {
+            showMessage('Please enter a task description');
+            input.focus();
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    text: taskText,
+                    priority: 'medium'
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}: Failed to add task`);
+            }
+
+            const newTask = await response.json();
+            tasks.unshift(newTask);
+            input.value = '';
+            renderTasks();
+            updateStats();
+            showMessage('Task added successfully!', 'success');
+        } catch (error) {
+            console.error('Add task error:', error);
+            showMessage('Error adding task: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function toggleTask(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        try {
+            const response = await fetch(`/api/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ completed: !task.completed })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: Failed to update task`);
+            }
+
+            const updatedTask = await response.json();
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) tasks[taskIndex] = updatedTask;
+
+            renderTasks();
+            updateStats();
+            autoSwitchTabIfNeeded();
+        } catch (error) {
+            console.error('Toggle task error:', error);
+            showMessage('Error updating task: ' + error.message);
+        }
+    }
+
+    function autoSwitchTabIfNeeded() {
+        const activeTasks = tasks.filter(task => !task.completed).length;
+        const completedTasks = tasks.filter(task => task.completed).length;
+        
+        if (currentFilter === 'active' && activeTasks === 0 && tasks.length > 0) {
+            currentFilter = 'all';
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+            renderTasks();
+        } else if (currentFilter === 'completed' && completedTasks === 0 && tasks.length > 0) {
+            currentFilter = 'all';
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+            renderTasks();
+        }
+    }
+
+    async function deleteTask(taskId) {
+        if (!confirm('Are you sure you want to delete this task?')) return;
+
+        try {
+            const response = await fetch(`/api/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `HTTP ${response.status}: Failed to delete task`);
+            }
+
+            tasks = tasks.filter(task => task.id != taskId);
+            renderTasks();
+            updateStats();
+            showMessage('Task deleted successfully!', 'success');
+            autoSwitchTabIfNeeded();
+        } catch (error) {
+            console.error('Delete task error:', error);
+            showMessage('Error deleting task: ' + error.message);
+        }
+    }
+
+    // UI functions
+    function filterTasks(filter, event) {
+        currentFilter = filter;
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        if (event) event.target.classList.add('active');
+        renderTasks();
+    }
+
+    function getFilteredTasks() {
+        switch (currentFilter) {
+            case 'active':
+                return tasks.filter(task => !task.completed);
+            case 'completed':
+                return tasks.filter(task => task.completed);
+            default:
+                return tasks;
+        }
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('tasksContainer');
+        const emptyState = document.getElementById('emptyState');
+        const filteredTasks = getFilteredTasks();
+
+        if (!container) return;
+
+        if (filteredTasks.length === 0) {
+            if (emptyState) {
+                emptyState.style.display = 'block';
+                container.innerHTML = '';
+                container.appendChild(emptyState);
+            }
+            return;
+        }
+
+        if (emptyState) emptyState.style.display = 'none';
+        
+        container.innerHTML = filteredTasks.map(task => `
+            <div class="task-item ${task.completed ? 'completed' : ''}">
+                <div class="priority-indicator priority-${task.priority}"></div>
+                <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                    onclick="toggleTask(${task.id})">
+                    ${task.completed ? '✓' : ''}
+                </div>
+                <span class="task-text">${escapeHtml(task.text)}</span>
+                <span class="task-time">${formatDate(task.createdAt)}</span>
+                <div class="task-actions">
+                    <button class="action-btn delete-btn" onclick="deleteTask(${task.id})" title="Delete task">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateStats() {
+        const totalEl = document.getElementById('totalTasks');
+        const activeEl = document.getElementById('activeTasks');
+        const completedEl = document.getElementById('completedTasks');
+        
+        if (!totalEl || !activeEl || !completedEl) return;
+        
+        const totalTasks = tasks.length;
+        const activeTasks = tasks.filter(task => !task.completed).length;
+        const completedTasks = tasks.filter(task => task.completed).length;
+
+        totalEl.textContent = totalTasks;
+        activeEl.textContent = activeTasks;
+        completedEl.textContent = completedTasks;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        } catch (e) {
+            return dateString;
+        }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listener to input field
+        const taskInput = document.getElementById('taskInput');
+        if (taskInput) {
+            taskInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addTask();
+            });
+        }
+        
+        // Add event listener to add button
+        const addButton = document.getElementById('addTaskBtn');
+        if (addButton) {
+            addButton.addEventListener('click', addTask);
+        }
+        
+        // Add event listeners to filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const filter = this.getAttribute('data-filter') || 'all';
+                filterTasks(filter, e);
+            });
+        });
+        
+        // Fetch tasks on page load
+        fetchTasks();
+    });
+</script>
+</body>
+</html>
