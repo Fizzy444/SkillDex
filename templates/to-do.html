@@ -6,7 +6,6 @@
     <title>To-Do List - SkillDEX</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Your existing CSS styles remain the same */
         * {
             margin: 0;
             padding: 0;
@@ -105,9 +104,19 @@
             pointer-events: none;
             opacity: 0.7;
         }
-        .add-btn.loading::before {
-            content: "⏳ ";
+        .add-btn .loading-spinner {
+            display: none;
         }
+        .add-btn .fas { 
+            display: inline-block; 
+        }
+        .add-btn.loading .fas {
+            display: none; 
+        }
+        .add-btn.loading .loading-spinner {
+            display: inline-block; 
+        }
+
         .filters {
             display: flex;
             gap: 10px;
@@ -181,6 +190,7 @@
             border: 1px solid #e5e7eb;
             transition: all 0.3s ease;
             animation: taskSlideIn 0.3s ease-out;
+            flex-wrap: wrap;
         }
 
         @keyframes taskSlideIn {
@@ -236,6 +246,9 @@
             font-size: 16px;
             color: #374151;
             transition: all 0.3s ease;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
         }
 
         .task-item.completed .task-text {
@@ -306,14 +319,15 @@
         .priority-medium { background: #f59e0b; }
         .priority-low { background: #10b981; }
 
-        .loading {
+        .loading-spinner {
             display: inline-block;
             width: 20px;
             height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-right: 8px;
         }
 
         @keyframes spin {
@@ -342,21 +356,90 @@
         }
 
         @media (max-width: 640px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .todo-card {
+                padding: 20px;
+            }
+
             .input-group {
                 flex-direction: column;
+                gap: 10px;
             }
             
             .add-btn {
+                width: 100%;
                 justify-content: center;
+                padding: 12px 20px;
             }
             
             .filters {
                 justify-content: center;
+                gap: 8px;
+            }
+
+            .filter-btn {
+                padding: 6px 12px;
+                font-size: 13px;
             }
             
             .task-stats {
                 flex-direction: column;
                 gap: 10px;
+                padding: 10px;
+            }
+
+            .task-item {
+                display: flex; 
+                flex-wrap: wrap; 
+                align-items: center; 
+                padding: 15px;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .priority-indicator {
+                height: 100%;
+            }
+            
+            .task-checkbox {
+                flex-shrink: 0;
+            }
+
+            .task-text {
+                font-size: 15px;
+                flex-grow: 1;
+                min-width: 0; 
+                word-break: break-word;
+                overflow-wrap: break-word;
+                min-width: 0;
+            }
+
+            .task-time {
+                order: 2; 
+                flex-basis: 100%; 
+                margin-left: 0;
+                text-align: right; 
+                font-size: 11px;
+                color: #888;
+            }
+
+            .task-actions {
+                order: 3;
+                flex-basis: 100%; 
+                margin-left: auto;
+                justify-content: flex-end; 
+                gap: 8px;
             }
         }
     </style>
@@ -375,16 +458,17 @@
             <div class="task-input-section">
                 <div class="input-group">
                     <input type="text" id="taskInput" class="task-input" placeholder="Add a new task..." maxlength="200">
-                    <button class="add-btn" onclick="addTask()" id="addTaskBtn">
+                    <button class="add-btn" id="addTaskBtn">
+                        <span class="loading-spinner"></span>
                         <i class="fas fa-plus"></i>
-                        Add Task
+                        <span>Add Task</span>
                     </button>
                 </div>
                 
                 <div class="filters">
-                    <button class="filter-btn active" onclick="filterTasks('all', event)">All</button>
-                    <button class="filter-btn" onclick="filterTasks('active', event)">Active</button>
-                    <button class="filter-btn" onclick="filterTasks('completed', event)">Completed</button>
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
                 </div>
             </div>
 
@@ -416,7 +500,7 @@
 <script>
     let tasks = [];
     let currentFilter = 'all';
-    const API_BASE = ""; // Use relative URLs
+    const API_BASE = "";
     
     // Utility functions
     function showMessage(message, type = 'error') {
@@ -450,14 +534,22 @@
         const button = document.getElementById(buttonId);
         if (!button) return;
 
+        const icon = button.querySelector('.fas.fa-plus');
+        const spinner = button.querySelector('.loading-spinner');
+        const buttonTextSpan = button.querySelector('span:not(.loading-spinner)'); 
+
         if (isLoading) {
             button.classList.add("loading");
             button.disabled = true;
-            button.innerHTML = '<div class="loading-spinner"></div> Adding...';
+            if (icon) icon.style.display = 'none';
+            if (spinner) spinner.style.display = 'inline-block';
+            if (buttonTextSpan) buttonTextSpan.textContent = 'Adding...';
         } else {
             button.classList.remove("loading");
             button.disabled = false;
-            button.innerHTML = '<i class="fas fa-plus"></i> Add Task';
+            if (icon) icon.style.display = 'inline-block';
+            if (spinner) spinner.style.display = 'none';
+            if (buttonTextSpan) buttonTextSpan.textContent = 'Add Task';
         }
     }
 
@@ -582,7 +674,8 @@
             });
             document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
             renderTasks();
-        } else if (currentFilter === 'completed' && completedTasks === 0 && tasks.length > 0) {
+        } 
+        else if (currentFilter === 'completed' && completedTasks === 0 && tasks.length > 0) {
             currentFilter = 'all';
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -624,7 +717,6 @@
         }
     }
 
-    // UI functions
     function filterTasks(filter, event) {
         currentFilter = filter;
 
@@ -632,7 +724,10 @@
             btn.classList.remove('active');
         });
 
-        if (event) event.target.classList.add('active');
+        const targetBtn = event ? event.currentTarget : document.querySelector(`.filter-btn[data-filter="${filter}"]`);
+        if (targetBtn) {
+            targetBtn.classList.add('active');
+        }
         renderTasks();
     }
 
@@ -715,9 +810,7 @@
         }
     }
 
-    // Initialize when page loads
     document.addEventListener('DOMContentLoaded', function() {
-        // Add event listener to input field
         const taskInput = document.getElementById('taskInput');
         if (taskInput) {
             taskInput.addEventListener('keypress', function(e) {
@@ -725,21 +818,17 @@
             });
         }
         
-        // Add event listener to add button
         const addButton = document.getElementById('addTaskBtn');
         if (addButton) {
             addButton.addEventListener('click', addTask);
         }
         
-        // Add event listeners to filter buttons
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 const filter = this.getAttribute('data-filter') || 'all';
                 filterTasks(filter, e);
             });
         });
-        
-        // Fetch tasks on page load
         fetchTasks();
     });
 </script>
