@@ -35,7 +35,6 @@
             min-height: 100vh;
         }
 
-        /* Navigation */
         .navbar {
             background: var(--card);
             padding: 1rem 0;
@@ -153,7 +152,6 @@
             color: var(--dark);
         }
 
-        /* Main Content */
         .main-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -183,7 +181,6 @@
             font-size: 1.1rem;
         }
 
-        /* Stats Section */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -245,7 +242,6 @@
             font-weight: 500;
         }
 
-        /* Feature Cards */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -311,7 +307,6 @@
             flex-wrap: wrap;
         }
 
-        /* Quick Actions */
         .quick-actions {
             background: var(--card);
             padding: 2rem;
@@ -356,9 +351,8 @@
         .action-icon {
             font-size: 1.25rem;
         }
-        /* --- Hamburger Menu Button --- */
         .hamburger-btn {
-            display: none; /* Hidden by default on desktop */
+            display: none; 
             flex-direction: column;
             justify-content: space-around;
             width: 2rem;
@@ -367,7 +361,7 @@
             border: none;
             cursor: pointer;
             padding: 0;
-            z-index: 200; /* Ensure it's on top */
+            z-index: 200; 
         }
 
         .hamburger-btn span {
@@ -390,10 +384,9 @@
         .hamburger-btn.active span:nth-child(3) {
             transform: rotate(-45deg);
         }
-        /* Responsive Design */
+
         @media (max-width: 768px) {
             .nav-container {
-                /* Re-order elements for mobile view */
                 display: flex;
                 flex-wrap: wrap;
                 justify-content: space-between;
@@ -401,55 +394,46 @@
                 position: relative;
             }
 
-            /* Show the hamburger button on mobile */
             .hamburger-btn {
                 display: flex;
-                order: 2; /* Place it after the brand */
+                order: 2;
             }
 
-            /* User menu on the far right */
             .user-menu {
                 order: 3;
             }
 
-            /* Nav Brand on the far left */
             .nav-brand {
                 order: 1;
             }
             
-            /* Hide the text username, keep avatar/logout */
             .user-menu .desktop-only {
                 display: none;
             }
             
-            /* --- Mobile Menu Styling --- */
             .nav-menu {
-                /* Hide menu off-screen by default */
                 list-style: none;
                 position: absolute;
-                top: 100%; /* Position below the navbar */
+                top: 100%;
                 left: 0;
                 width: 100%;
                 background: var(--card);
                 border-bottom: 1px solid var(--border);
                 box-shadow: var(--shadow);
                 
-                /* Animate the dropdown */
                 max-height: 0;
                 overflow: hidden;
                 transition: max-height 0.3s ease-out;
 
-                /* Stack the links vertically */
                 flex-direction: column;
                 align-items: center;
                 padding: 0;
                 gap: 0;
             }
 
-            /* This class will be toggled by JavaScript */
             .nav-menu.active {
-                max-height: 300px; /* Animate the height to show the menu */
-                padding: 1rem 0; /* Add padding when open */
+                max-height: 300px; 
+                padding: 1rem 0; 
             }
 
             .nav-link {
@@ -459,16 +443,14 @@
                 border-radius: 0;
             }
             
-            /* General mobile layout from previous step */
             .main-container { padding: 1.5rem 1rem; }
             .features-grid { grid-template-columns: 1fr; gap: 1.5rem; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .actions-grid { grid-template-columns: 1fr; } /* Stack actions for easier tapping */
+            .actions-grid { grid-template-columns: 1fr; }
             .welcome-card { padding: 1.5rem; text-align: center; }
             .welcome-content h1 { font-size: 1.5rem; }
             .welcome-content p { font-size: 1rem; }
         }
-        /* Animations */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -496,8 +478,6 @@
             <a href="{{ url_for('dashboard') }}" class="nav-brand">
                 🎯 SkillDEX
             </a>
-            
-            
             <div class="nav-menu" id="mobile-menu">
                 <a href="{{ url_for('dashboard') }}" class="nav-link active">Dashboard</a>
                 <a href="{{ url_for('chat') }}" class="nav-link">AI Assistant</a>
@@ -597,14 +577,12 @@
         const mobileMenu = document.getElementById('mobile-menu');
 
         hamburgerBtn.addEventListener('click', () => {
-            // Toggle the 'active' class on both the button and the menu
             hamburgerBtn.classList.toggle('active');
             mobileMenu.classList.toggle('active');
         });
         document.addEventListener('DOMContentLoaded', function() {
         let currentMode = null; 
 
-        // Check if mode is set in URL parameters when page loads
         const urlParams = new URLSearchParams(window.location.search);
         const modeFromURL = urlParams.get('mode');
         if (modeFromURL) {
@@ -612,7 +590,6 @@
             sessionStorage.setItem("chatMode", modeFromURL);
             console.log("DEBUG: Mode set from URL:", modeFromURL);
         } else {
-            // Check if mode is stored in sessionStorage
             currentMode = sessionStorage.getItem("chatMode");
             console.log("DEBUG: Mode from sessionStorage:", currentMode);
         }
@@ -634,7 +611,6 @@
             formData.append("message", message);
             formData.append("session_id", "default");
             
-            // Always include the current mode if available
             if (currentMode) {
                 formData.append("mode", currentMode);
                 console.log("DEBUG: Sending mode to backend:", currentMode);
@@ -665,12 +641,7 @@
             }
         }
 
-        // Make sendChatMessage available globally if you need to call it from other scripts
         window.sendChatMessage = sendChatMessage;
-
-        // Rest of your existing code...
-        
-        // Smooth scroll
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -684,7 +655,6 @@
             });
         });
 
-        // Loading states for buttons
         document.querySelectorAll('.btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 if (this.href && !this.href.includes('#')) {
@@ -699,7 +669,6 @@
             });
         });
 
-        // Animate stats on scroll
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -720,3 +689,4 @@
     </script>
 </body>
 </html>
+
