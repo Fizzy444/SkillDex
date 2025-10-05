@@ -37,8 +37,8 @@
             overflow-x: hidden;
         }
 
-        /* Navigation */
-        nav {
+        /* --- New Navigation Styles --- */
+        .navbar {
             position: fixed;
             top: 0;
             width: 100%;
@@ -50,7 +50,7 @@
             transition: all 0.3s ease;
         }
 
-        nav.scrolled {
+        .navbar.scrolled {
             background: rgba(255, 255, 255, 0.98);
             box-shadow: var(--shadow);
         }
@@ -64,39 +64,37 @@
             padding: 0 2rem;
         }
 
-        .logo {
+        .nav-brand {
             font-size: 1.75rem;
             font-weight: 800;
             background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-decoration: none;
         }
 
-        .nav-links {
+        .nav-menu {
             display: flex;
-            list-style: none;
-            gap: 2rem;
             align-items: center;
+            gap: 0.5rem;
         }
 
-        .nav-links a {
+        .nav-link {
             text-decoration: none;
             color: var(--dark);
             font-weight: 500;
             padding: 0.5rem 1rem;
             border-radius: 8px;
             transition: all 0.3s ease;
-            position: relative;
         }
 
-        .nav-links a:hover {
+        .nav-link:hover {
             color: var(--primary);
             background: rgba(79, 70, 229, 0.1);
-            transform: translateY(-2px);
         }
 
-        .nav-links a.cta {
+        .nav-link.cta {
             background: var(--primary);
             color: white;
             padding: 0.75rem 1.5rem;
@@ -104,27 +102,40 @@
             box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
         }
 
-        .nav-links a.cta:hover {
+        .nav-link.cta:hover {
             background: var(--secondary);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
         }
 
-        /* Mobile menu toggle */
-        .menu-toggle {
-            display: none;
+        /* --- Hamburger Menu Button --- */
+        .hamburger-btn {
+            display: none; /* Hidden by default on desktop */
             flex-direction: column;
+            justify-content: space-around;
+            width: 2rem;
+            height: 2rem;
+            background: transparent;
+            border: none;
             cursor: pointer;
-            gap: 4px;
+            padding: 0;
+            z-index: 200;
         }
 
-        .menu-toggle span {
-            width: 25px;
-            height: 3px;
+        .hamburger-btn span {
+            width: 2rem;
+            height: 0.25rem;
             background: var(--dark);
-            transition: 0.3s;
-            border-radius: 2px;
+            border-radius: 10px;
+            transition: all 0.3s linear;
+            position: relative;
+            transform-origin: 1px;
         }
+
+        .hamburger-btn.active span:nth-child(1) { transform: rotate(45deg); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; transform: translateX(20px); }
+        .hamburger-btn.active span:nth-child(3) { transform: rotate(-45deg); }
+
 
         /* Hero Section */
         .hero {
@@ -465,35 +476,67 @@
             transform: translateY(0);
         }
 
+        /* Scroll indicator */
+        .scroll-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: var(--gradient);
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
-            .nav-links {
-                position: fixed;
-                top: 70px;
-                left: -100%;
-                width: 100%;
-                height: calc(100vh - 70px);
-                background: rgba(255, 255, 255, 0.98);
-                flex-direction: column;
-                justify-content: flex-start;
-                align-items: center;
-                padding-top: 2rem;
-                transition: left 0.3s ease;
-                backdrop-filter: blur(20px);
-            }
-
-            .nav-links.active {
-                left: 0;
-            }
-
-            .menu-toggle {
-                display: flex;
-            }
-
+            /* --- Responsive Navigation --- */
             .nav-container {
                 padding: 0 1rem;
             }
 
+            .hamburger-btn {
+                display: flex;
+            }
+            
+            .nav-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: var(--card, #fff);
+                border-bottom: 1px solid var(--border);
+                box-shadow: var(--shadow);
+                
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+
+                flex-direction: column;
+                align-items: center;
+                padding: 0;
+                gap: 0;
+            }
+
+            .nav-menu.active {
+                max-height: 400px;
+                padding: 1rem 0;
+            }
+
+            .nav-link {
+                width: 100%;
+                text-align: center;
+                padding: 1rem 2rem;
+                border-radius: 0;
+            }
+
+            .nav-link.cta {
+                width: calc(100% - 4rem);
+                margin-top: 0.5rem;
+                border-radius: 12px;
+            }
+
+            /* --- General Page Responsiveness --- */
             .hero {
                 padding: 0 1rem;
             }
@@ -522,37 +565,27 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-
-        /* Scroll indicator */
-        .scroll-indicator {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 0%;
-            height: 3px;
-            background: var(--gradient);
-            z-index: 1001;
-            transition: width 0.3s ease;
-        }
     </style>
 </head>
 <body>
     <div class="scroll-indicator"></div>
     
-    <nav id="navbar">
+    <nav class="navbar" id="navbar">
         <div class="nav-container">
-            <div class="logo">SkillDEX</div>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#about">About</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="/login">Login</a></li>
-                <li><a href="/register" class="cta">Get Started</a></li>
-            </ul>
-            <div class="menu-toggle" id="menuToggle">
+            <a href="#" class="nav-brand">SkillDEX</a>
+            
+            <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle Menu">
                 <span></span>
                 <span></span>
                 <span></span>
+            </button>
+
+            <div class="nav-menu" id="mobile-menu">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="/login" class="nav-link">Login</a>
+                <a href="/register" class="nav-link cta">Get Started</a>
             </div>
         </div>
     </nav>
@@ -675,17 +708,20 @@
         });
 
         // Mobile menu toggle
-        const menuToggle = document.getElementById('menuToggle');
-        const navLinks = document.getElementById('navLinks');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
 
-        menuToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
+        hamburgerBtn.addEventListener('click', () => {
+            // Toggle the 'active' class on both the button and the menu
+            hamburgerBtn.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
         });
 
         // Close mobile menu when clicking on a link
-        navLinks.addEventListener('click', (e) => {
+        mobileMenu.addEventListener('click', (e) => {
             if (e.target.tagName === 'A') {
-                navLinks.classList.remove('active');
+                hamburgerBtn.classList.remove('active');
+                mobileMenu.classList.remove('active');
             }
         });
 
