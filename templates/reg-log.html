@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SkillDEX - Authentication</title>
   <style>
-    :root{
+:root{
       --bg: #f6f8fb;
       --card: #ffffff;
       --primary: #4f46e5;
@@ -31,7 +31,58 @@
       color:#0f172a;
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
+      position: relative;
     }
+
+    #flash-messages-container {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 100%;
+      max-width: 450px; 
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+
+    .flash-messages-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .flash-message {
+      padding: 12px 20px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      font-size: 0.95em;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .flash-message.fade-out {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    .flash-message-danger {
+      background-color: #dc3545; 
+    }
+    .flash-message-success {
+      background-color: #28a745;
+    }
+    .flash-message-warning {
+      background-color: #ffc107; 
+      color: #333;
+    }
+    .flash-message-info {
+      background-color: #17a2b8;
+    }
+
 
     .auth-wrap{
       width:100%;
@@ -198,6 +249,7 @@
     }
     
     .pw-toggle{
+      margin-top: 12px;
       position:absolute;
       right:12px;
       top:50%;
@@ -223,6 +275,15 @@
       background: #fef2f2;
       border-radius: 6px;
       border-left: 3px solid var(--danger);
+    }
+    .error-message { 
+        color: var(--danger);
+        font-size: 13px;
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: #fef2f2;
+        border-radius: 6px;
+        border-left: 3px solid var(--danger);
     }
 
     .success{
@@ -272,10 +333,28 @@
       body{
         padding: 16px;
       }
+      #flash-messages-container {
+        width: calc(100% - 32px); 
+        left: 16px; 
+        transform: translateX(0);
+      }
     }
   </style>
 </head>
 <body>
+  <!-- This is the container for Flask flash messages -->
+  <div id="flash-messages-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-messages-list">
+          {% for category, message in messages %}
+            <li class="flash-message flash-message-{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+  </div>
+
   <div class="auth-wrap">
     <div class="auth-side">
       <h1>SkillDEX</h1>
@@ -289,8 +368,7 @@
     </div>
 
     <div class="auth-card">
-      <!-- Flash Messages -->
-      <div id="flash-messages"></div>
+      <!-- REMOVED: <div id="flash-messages"></div> -->
       
       <!-- Tabs -->
       <div class="auth-tabs">
@@ -342,11 +420,16 @@
       </form>
     </div>
   </div>
+</body>
 
-  <script>
+<script>
     document.addEventListener("DOMContentLoaded", function () {
       const tabs = document.querySelectorAll(".tab-btn");
       const forms = document.querySelectorAll(".auth-form");
+
+      function getErrorDiv(form) {
+          return form.querySelector(".form-error");
+      }
 
       function showForm(target) {
         tabs.forEach(tab => {
@@ -355,13 +438,17 @@
         
         forms.forEach(form => {
           form.classList.toggle("active", form.id === `${target}-form`);
+          const errorDiv = getErrorDiv(form);
+          if (errorDiv) errorDiv.innerHTML = ""; 
         });
       }
 
       tabs.forEach(tab => {
         tab.addEventListener("click", () => {
           showForm(tab.dataset.target);
-          document.querySelectorAll(".form-error").forEach(err => err.innerHTML = "");
+          // Also clear any flash messages when switching tabs
+          const flashContainer = document.getElementById("flash-messages-container");
+          if (flashContainer) flashContainer.innerHTML = ""; // Clear existing flash messages
         });
       });
 
@@ -381,29 +468,31 @@
       });
 
       function validateForm(form) {
-        const errorDiv = form.querySelector(".form-error");
-        errorDiv.innerHTML = "";
+        const errorDiv = getErrorDiv(form);
+        if (!errorDiv) return true; 
 
-        const email = form.querySelector("input[name='email']");
-        const password = form.querySelector("input[name='password']");
-        const confirmPassword = form.querySelector("input[name='confirm_password']");
-        const username = form.querySelector("input[name='username']");
+        errorDiv.innerHTML = ""; 
 
-        if (email && !email.value.includes("@")) {
-          errorDiv.innerHTML = '<div class="error">Please enter a valid email address.</div>';
+        const emailInput = form.querySelector("input[name='email']");
+        const passwordInput = form.querySelector("input[name='password']");
+        const confirmPasswordInput = form.querySelector("input[name='confirm_password']");
+        const usernameInput = form.querySelector("input[name='username']");
+
+        if (emailInput && !emailInput.value.includes("@")) {
+          errorDiv.innerHTML = '<div class="error-message">Please enter a valid email address.</div>';
           return false;
         }
-        if (username && username.value.length < 3) {
-          errorDiv.innerHTML = '<div class="error">Username must be at least 3 characters long.</div>';
+        if (usernameInput && usernameInput.value.length < 3) {
+          errorDiv.innerHTML = '<div class="error-message">Username must be at least 3 characters long.</div>';
           return false;
         }
-        if (password && password.value.length < 6) {
-          errorDiv.innerHTML = '<div class="error">Password must be at least 6 characters long.</div>';
+        if (passwordInput && passwordInput.value.length < 6) {
+          errorDiv.innerHTML = '<div class="error-message">Password must be at least 6 characters long.</div>';
           return false;
         }
 
-        if (confirmPassword && password.value !== confirmPassword.value) {
-          errorDiv.innerHTML = '<div class="error">Passwords do not match.</div>';
+        if (confirmPasswordInput && passwordInput && passwordInput.value !== confirmPasswordInput.value) {
+          errorDiv.innerHTML = '<div class="error-message">Passwords do not match.</div>';
           return false;
         }
 
@@ -421,7 +510,7 @@
       const regPassword = document.getElementById("reg-password");
       const regConfirm = document.getElementById("reg-confirm");
       
-      if (regConfirm) {
+      if (regConfirm && regPassword) {
         regConfirm.addEventListener("input", function() {
           if (regPassword.value !== regConfirm.value) {
             regConfirm.style.borderColor = "#ef4444";
@@ -429,20 +518,37 @@
             regConfirm.style.borderColor = "#10b981";
           }
         });
+        regPassword.addEventListener("input", function() {
+            if (regConfirm.value && regPassword.value !== regConfirm.value) {
+                regConfirm.style.borderColor = "#ef4444";
+            } else if (regConfirm.value) {
+                regConfirm.style.borderColor = "#10b981";
+            }
+        });
       }
 
-      function showFlashMessage(message, type = "error") {
-        const flashDiv = document.getElementById("flash-messages");
-        const messageDiv = document.createElement("div");
-        messageDiv.className = type;
-        messageDiv.textContent = message;
-        flashDiv.appendChild(messageDiv);
-        
-        setTimeout(() => {
-          messageDiv.remove();
-        }, 5000);
+      function handleFlashedMessages() {
+        const flashContainer = document.getElementById("flash-messages-container");
+        if (!flashContainer) return;
+
+        const flashMessages = flashContainer.querySelectorAll(".flash-message");
+        if (flashMessages.length > 0) {
+          showForm("login"); 
+          flashMessages.forEach(msg => {
+            setTimeout(() => {
+              msg.remove();
+              if (flashContainer.querySelector(".flash-messages-list") && 
+                  !flashContainer.querySelector(".flash-message")) {
+                  flashContainer.querySelector(".flash-messages-list").remove();
+              }
+              if (flashContainer.innerHTML.trim() === "") {
+              }
+            }, 5000); 
+          });
+        }
       }
 
+      handleFlashedMessages();
     });
   </script>
 </body>
