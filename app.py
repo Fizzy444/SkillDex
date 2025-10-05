@@ -106,16 +106,6 @@ def send_otp_email(email, otp_code, username):
         msg['To'] = email
         msg['Subject'] = "SkillDEX Verification Code"
 
-        template_path = os.path.join(os.path.dirname(__file__), 'templates', 'email.html')
-        try:
-            with open(template_path, 'r', encoding='utf-8') as f:
-                html_template = f.read()
-        except FileNotFoundError:
-            print(f"Error: Email template not found at {template_path}")
-            return False
-        except Exception as e:
-            print(f"Error reading email template file: {e}")
-            return False
         body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -800,3 +790,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
