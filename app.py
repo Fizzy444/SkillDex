@@ -78,7 +78,7 @@ class Task(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     text = db.Column(db.String(200), nullable=False)
     completed = db.Column(db.Boolean, default=False, nullable=False)
-    priority = db.Column(db.String(10), default='medium', nullable=False)  # low, medium, high
+    priority = db.Column(db.String(10), default='medium', nullable=False) 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -149,8 +149,6 @@ def send_otp_email(email, otp_code, username):
         """
         
         msg.attach(MIMEText(body, 'html'))
-        
-        # Send email
         server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
         server.starttls()
         server.login(EMAIL_USER, EMAIL_PASS)
@@ -176,7 +174,6 @@ def chat_api():
         print(f"DEBUG: Received mode = '{mode}'")
         print(f"DEBUG: Available form data = {dict(request.form)}")
 
-        # Determine system message based on mode
         if mode == "urgent":
             system_message = system_message1
             print("DEBUG: Using system_message1 (urgent)")
@@ -193,9 +190,7 @@ def chat_api():
         if not message and not image_file:
             return jsonify({"error": "Please provide a message or upload an image."}), 400
 
-        # Create new session or get existing one
         if session_id not in chat_sessions:
-            # Start with system prompt, then user's message
             chat_sessions[session_id] = model.start_chat(
                 history=[
                     {"role": "user", "parts": [system_message]},
@@ -203,7 +198,6 @@ def chat_api():
                 ]
             )
         else:
-            # For ongoing sessions, append user's message to history
             chat = chat_sessions[session_id]
             chat.send_message(message)
             chat_sessions[session_id] = chat
@@ -290,7 +284,6 @@ def reset_chat():
     except Exception as e:
         return jsonify({"error": "Failed to reset session"}), 500
 
-##################################################################################################################################################
 @app.route("/")
 def home():
     if current_user.is_authenticated:
@@ -367,7 +360,6 @@ def login():
         if user and bcrypt.check_password_hash(user.password, password):
             if not user.is_verified:
                 flash("Your account is not verified. Please check your email for the OTP.", "warning")
-                # You might want to redirect to an OTP verification page here
                 return render_template('reg-log.html', form_type="login")
             else:
                 login_user(user, remember=True)
@@ -659,7 +651,6 @@ def delete_task(task_id):
 @app.route("/api/tasks/stats", methods=["GET"])
 @login_required
 def get_task_stats():
-    """Get task statistics for the current user"""
     try:
         total_tasks = Task.query.filter_by(user_id=current_user.id).count()
         completed_tasks = Task.query.filter_by(user_id=current_user.id, completed=True).count()
@@ -774,7 +765,6 @@ def logout():
     flash(f"Goodbye, {username}! You have been logged out.", "info")
     return redirect(url_for('home'))
 
-#################################################################################################################
 @app.route("/health")
 def health_check():
     return jsonify({"status": "healthy", "gemini_configured": bool(google_api_key)})
@@ -806,7 +796,6 @@ def debug_users():
     users = User.query.all()
     users_data = [{'id': u.id, 'email': u.email, 'is_verified': u.is_verified} for u in users]
     return jsonify(users_data)
-#################################################################################################################
 
 if __name__ == '__main__':
     with app.app_context():
@@ -817,5 +806,4 @@ if __name__ == '__main__':
 
     public_url = ngrok.connect(addr=7860, proto="http")
     print("Ngrok Public URL:", public_url)
-
     app.run(port=7860)
