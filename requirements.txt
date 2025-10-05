@@ -34,6 +34,7 @@ greenlet==3.2.4
 groovy==0.1.2
 grpcio==1.74.0
 grpcio-status==1.71.2
+gunicorn==23.0.0
 h11==0.16.0
 httpcore==1.0.9
 httplib2==0.22.0
