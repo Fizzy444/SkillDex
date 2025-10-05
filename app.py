@@ -39,7 +39,7 @@ system_message3 = Prompt.prompt3
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(32)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///users.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['SESSION_TYPE'] = 'redis'
@@ -47,7 +47,7 @@ app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'skdex_session:'
-app.config['SESSION_REDIS'] = redis.from_url('redis://127.0.0.1:6379')
+app.config['SESSION_REDIS'] = redis.from_url(os.getenv('REDIS_URL', 'redis://127.0.0.1:6379'))
 
 db = SQLAlchemy(app)
 sess = Session(app)
@@ -800,4 +800,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run()
+
 
