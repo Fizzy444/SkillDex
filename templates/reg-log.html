@@ -342,7 +342,6 @@
   </style>
 </head>
 <body>
-  <!-- This is the container for Flask flash messages -->
   <div id="flash-messages-container">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -368,8 +367,6 @@
     </div>
 
     <div class="auth-card">
-      <!-- REMOVED: <div id="flash-messages"></div> -->
-      
       <!-- Tabs -->
       <div class="auth-tabs">
         <button type="button" class="tab-btn active" data-target="login">Login</button>
@@ -446,9 +443,8 @@
       tabs.forEach(tab => {
         tab.addEventListener("click", () => {
           showForm(tab.dataset.target);
-          // Also clear any flash messages when switching tabs
           const flashContainer = document.getElementById("flash-messages-container");
-          if (flashContainer) flashContainer.innerHTML = ""; // Clear existing flash messages
+          if (flashContainer) flashContainer.innerHTML = ""; 
         });
       });
 
@@ -553,3 +549,4 @@
   </script>
 </body>
 </html>
+
