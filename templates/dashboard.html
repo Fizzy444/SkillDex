@@ -356,34 +356,118 @@
         .action-icon {
             font-size: 1.25rem;
         }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem;
-            }
-
-            .nav-container {
-                padding: 0 1rem;
-            }
-
-            .features-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .welcome-card {
-                padding: 1.5rem;
-            }
-
-            .welcome-content h1 {
-                font-size: 1.5rem;
-            }
+        /* --- Hamburger Menu Button --- */
+        .hamburger-btn {
+            display: none; /* Hidden by default on desktop */
+            flex-direction: column;
+            justify-content: space-around;
+            width: 2rem;
+            height: 2rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            z-index: 200; /* Ensure it's on top */
         }
 
+        .hamburger-btn span {
+            width: 2rem;
+            height: 0.25rem;
+            background: var(--dark);
+            border-radius: 10px;
+            transition: all 0.3s linear;
+            position: relative;
+            transform-origin: 1px;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg);
+        }
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg);
+        }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                /* Re-order elements for mobile view */
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                position: relative;
+            }
+
+            /* Show the hamburger button on mobile */
+            .hamburger-btn {
+                display: flex;
+                order: 2; /* Place it after the brand */
+            }
+
+            /* User menu on the far right */
+            .user-menu {
+                order: 3;
+            }
+
+            /* Nav Brand on the far left */
+            .nav-brand {
+                order: 1;
+            }
+            
+            /* Hide the text username, keep avatar/logout */
+            .user-menu .desktop-only {
+                display: none;
+            }
+            
+            /* --- Mobile Menu Styling --- */
+            .nav-menu {
+                /* Hide menu off-screen by default */
+                list-style: none;
+                position: absolute;
+                top: 100%; /* Position below the navbar */
+                left: 0;
+                width: 100%;
+                background: var(--card);
+                border-bottom: 1px solid var(--border);
+                box-shadow: var(--shadow);
+                
+                /* Animate the dropdown */
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+
+                /* Stack the links vertically */
+                flex-direction: column;
+                align-items: center;
+                padding: 0;
+                gap: 0;
+            }
+
+            /* This class will be toggled by JavaScript */
+            .nav-menu.active {
+                max-height: 300px; /* Animate the height to show the menu */
+                padding: 1rem 0; /* Add padding when open */
+            }
+
+            .nav-link {
+                width: 100%;
+                text-align: center;
+                padding: 1rem 2rem;
+                border-radius: 0;
+            }
+            
+            /* General mobile layout from previous step */
+            .main-container { padding: 1.5rem 1rem; }
+            .features-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .actions-grid { grid-template-columns: 1fr; } /* Stack actions for easier tapping */
+            .welcome-card { padding: 1.5rem; text-align: center; }
+            .welcome-content h1 { font-size: 1.5rem; }
+            .welcome-content p { font-size: 1rem; }
+        }
         /* Animations */
         @keyframes fadeInUp {
             from {
@@ -413,18 +497,24 @@
                 🎯 SkillDEX
             </a>
             
-            <div class="nav-menu">
+            
+            <div class="nav-menu" id="mobile-menu">
                 <a href="{{ url_for('dashboard') }}" class="nav-link active">Dashboard</a>
                 <a href="{{ url_for('chat') }}" class="nav-link">AI Assistant</a>
                 <a href="{{ url_for('to_do') }}" class="nav-link">To-Do</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline mobile-logout-btn">Logout</a>
             </div>
-
+            
             <div class="user-menu">
                 <div class="user-avatar">
                     {{ user.username[0].upper() }}
                 </div>
-                <span style="color: var(--dark); font-weight: 500;">{{ user.username }}</span>
-                <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+                <span class="desktop-only">{{ user.username }}</span>
+                <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
     </nav>
@@ -503,6 +593,14 @@
     </div>
 
     <script>
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        hamburgerBtn.addEventListener('click', () => {
+            // Toggle the 'active' class on both the button and the menu
+            hamburgerBtn.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        });
         document.addEventListener('DOMContentLoaded', function() {
         let currentMode = null; 
 
