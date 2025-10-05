@@ -7,478 +7,249 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
-            overflow: hidden;
-        }
+    html, body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+    }
 
-        .chat-container {
-            background: white;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
 
-        .chat-header {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            padding: 20px 30px;
-            text-align: center;
-            position: relative;
-            flex-shrink: 0;
-        }
+    .chat-container {
+        background: white;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .chat-header {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        padding: 20px 30px;
+        text-align: center;
+        position: relative;
+        flex-shrink: 0;
+        z-index: 2;
+    }
+    
+    .chat-header h2 { font-size: 28px; font-weight: 600; margin-bottom: 5px; }
+    .chat-header p { font-size: 16px; opacity: 0.9; }
+
+    .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background: #4ade80;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .messages-container {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+        background: #f8fafc;
+        min-height: 0;
+        scroll-behavior: smooth;
+    }
+
+    .message {
+        margin-bottom: 25px;
+        display: flex;
+        animation: fadeInUp 0.5s ease;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .bot-message { justify-content: flex-start; }
+    .user-message { justify-content: flex-end; }
+
+    .message-content { max-width: 70%; padding: 18px 24px; border-radius: 20px; position: relative; }
+    .bot-message .message-content { background: white; color: #374151; border-bottom-left-radius: 5px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); }
+    .user-message .message-content { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-bottom-right-radius: 5px; }
+    .message-time { font-size: 12px; opacity: 0.7; margin-top: 8px; text-align: right; }
+    .bot-message .message-time { text-align: left; }
+
+    .typing-indicator { 
+        display: none; 
+        padding: 15px 20px; 
+        margin: 10px 30px; 
+        background: white; 
+        border-radius: 20px;
+        width: fit-content;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+    }
+    .typing-indicator.active { display: flex; align-items: center; }
+    .typing-dots { display: flex; gap: 4px; }
+    .typing-dots span { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; animation: typing 1.4s infinite; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
+
+    .input-area {
+        padding: 20px 30px 30px 30px;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column; 
+        gap: 15px;
+        flex-shrink: 0;
+    }
+
+    .input-row {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+        width: 100%;
+    }
+
+    .textarea-container { flex: 1; position: relative; }
+    .input-area textarea {
+        width: 100%;
+        min-height: 52px;
+        max-height: 200px;
+        padding: 16px 20px;
+        border: 2px solid #e2e8f0;
+        border-radius: 25px;
+        font-size: 16px;
+        font-family: inherit;
+        outline: none;
+        resize: none;
+        transition: all 0.3s ease;
+        line-height: 1.4;
+        overflow-y: auto;
+    }
+    .input-area textarea:focus { border-color: #4facfe; box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1); }
+    .input-area textarea::placeholder { color: #9ca3af; }
+
+    .send-button, .image-upload-btn {
+        border-radius: 50%;
+        width: 52px;
+        height: 52px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .send-button {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white; border: none; font-size: 20px;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+    }
+    .send-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4); }
+    .send-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3); }
+
+    .image-upload-btn { background: #f8fafc; border: 2px solid #e2e8f0; color: #64748b; }
+    .image-upload-btn:hover { background: #e0e0e0; border-color: #c0c0c0; }
+
+    #imagePreviewContainer {
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 15px; 
+        width: fit-content;
+    }
+    #imagePreviewImg { 
+        width: 80px; 
+        height: 80px; 
+        object-fit: cover; 
+        border-radius: 8px; 
+    }
+    #removeImageBtn {
+        background: #ef4444;
+        color: white; 
+        border: none; 
+        border-radius: 50%;
+        width: 28px;
+        height: 28px; 
+        cursor: pointer; 
+        font-size: 18px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        transition: background 0.2s ease;
+    }
+    #removeImageBtn:hover {
+        background: #dc2626;
+    }
+
+    .uploaded-image { display: flex; flex-direction: column; align-items: flex-end; }
+    .image-preview { max-width: 200px; max-height: 200px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+    .uploaded-image p { 
+        margin-top: 0; 
+        padding-top: 10px; 
+        border-top: 1px solid rgba(255,255,255,0.2);
+        font-size: 0.9em; 
+        opacity: 0.8;
+    }
+
+    .message-content h1, .message-content h2, .message-content h3 { margin: 15px 0 10px 0; font-weight: 600; }
+    .message-content ul, .message-content ol { margin: 10px 0; padding-left: 20px; }
+    .message-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
+    .message-content pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; overflow-x: auto; margin: 15px 0; }
+    .message-content pre code { background: none; padding: 0; }
+    .streaming-cursor { display: inline-block; width: 2px; height: 1em; background: #4facfe; animation: blink 1s infinite; margin-left: 2px; }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    
+    .messages-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .messages-container::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .messages-container::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; 
+        border-radius: 4px; 
+        border: none;
+        transition: background-color .2s ease;
+    }
+    .messages-container::-webkit-scrollbar-thumb:hover {
+        background-color: #a8b6c8;
+    }
+
+    @media (max-width: 768px) {
+        .chat-header { padding: 15px 20px; }
+        .chat-header h2 { font-size: 24px; }
+        .messages-container { padding: 15px; } 
+        .input-area { padding: 10px 15px 15px 15px; }
+        .message-content { max-width: 90%; padding: 12px 18px; font-size: 15px; }
+        .send-button, .image-upload-btn { width: 48px; height: 48px; }
+        .input-area textarea { padding: 12px 18px; min-height: 48px; font-size: 15px; } 
+        .typing-indicator { margin: 10px 15px; }
         
-        .chat-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-        }
-
-        .chat-header-info {
-            position: relative;
-            z-index: 1;
-        }
-
-        .chat-header h2 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .chat-header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-
-        .status-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #4ade80;
-            border-radius: 50%;
-            margin-right: 8px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .messages-container {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
-            background: #f8fafc;
-            min-height: 0;
-        }
-
-        .message {
-            margin-bottom: 25px;
-            display: flex;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .bot-message {
-            justify-content: flex-start;
-        }
-
-        .user-message {
-            justify-content: flex-end;
-        }
-
-        .message-content {
-            max-width: 70%;
-            padding: 18px 24px;
-            border-radius: 20px;
-            position: relative;
-        }
-
-        .bot-message .message-content {
-            background: white;
-            color: #374151;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .user-message .message-content {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            border-bottom-right-radius: 5px;
-        }
-
-        .message-time {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-top: 8px;
-            text-align: right;
-        }
-
-        .bot-message .message-time {
-            text-align: left;
-        }
-
-        .typing-indicator {
-            display: none;
-            padding: 15px 20px;
-            margin: 10px 30px;
-        }
-
-        .typing-indicator.active {
-            display: flex;
-            align-items: center;
-        }
-
-        .typing-dots {
-            display: flex;
-            gap: 4px;
-        }
-
-        .typing-dots span {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #cbd5e1;
-            animation: typing 1.4s infinite;
-        }
-
-        .typing-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .typing-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-            }
-            30% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .input-area {
-            padding: 20px 30px 30px 30px;
-            background: white;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-            flex-shrink: 0;
-        }
-
-        .textarea-container {
-            flex: 1;
-            position: relative;
-        }
-
-        .input-area textarea {
-            width: 100%;
-            min-height: 52px;
-            max-height: 200px;
-            padding: 16px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 25px;
-            font-size: 16px;
-            font-family: inherit;
-            outline: none;
-            resize: none;
-            transition: all 0.3s ease;
-            line-height: 1.4;
-            overflow-y: auto;
-        }
-
-        .input-area textarea:focus {
-            border-color: #4facfe;
-            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
-        }
-
-        .input-area textarea::placeholder {
-            color: #9ca3af;
-        }
-
-        .send-button {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 52px;
-            height: 52px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
-            flex-shrink: 0;
-        }
-
-        .send-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
-        }
-
-        .send-button:active {
-            transform: translateY(0);
-        }
-
-        .send-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
-        }
-
-        .image-upload-btn {
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 50%;
-            width: 52px;
-            height: 52px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            color: #64748b;
-            flex-shrink: 0;
-        }
-
-        .image-upload-btn:hover {
-            background: #4facfe;
-            color: white;
-            border-color: #4facfe;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
-        }
-
-        .image-preview {
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: 10px;
-            margin: 10px 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .uploaded-image {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .processing-indicator {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 12px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin: 15px 30px;
-            display: none;
-            border-left: 4px solid #f59e0b;
-        }
-
-        .processing-indicator.active {
-            display: block;
-        }
-
-        /* Markdown styling */
-        .message-content h1,
-        .message-content h2,
-        .message-content h3,
-        .message-content h4,
-        .message-content h5,
-        .message-content h6 {
-            margin: 15px 0 10px 0;
-            font-weight: 600;
-        }
-
-        .message-content h1 { font-size: 1.5em; }
-        .message-content h2 { font-size: 1.3em; }
-        .message-content h3 { font-size: 1.1em; }
-
-        .message-content ul,
-        .message-content ol {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-
-        .message-content li {
-            margin: 5px 0;
-        }
-
-        .message-content blockquote {
-            border-left: 4px solid #4facfe;
-            padding-left: 15px;
-            margin: 15px 0;
-            font-style: italic;
-            background: rgba(79, 172, 254, 0.05);
-            padding: 10px 15px;
-            border-radius: 5px;
-        }
-
-        .message-content code {
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9em;
-        }
-
-        .message-content pre {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 15px;
-            overflow-x: auto;
-            margin: 15px 0;
-        }
-
-        .message-content pre code {
-            background: none;
-            padding: 0;
-        }
-
-        .message-content strong {
-            font-weight: 600;
-        }
-
-        .message-content em {
-            font-style: italic;
-        }
-
-        .message-content a {
-            color: #4facfe;
-            text-decoration: none;
-        }
-
-        .message-content a:hover {
-            text-decoration: underline;
-        }
-
-        .message-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 15px 0;
-        }
-
-        .message-content th,
-        .message-content td {
-            border: 1px solid #e2e8f0;
-            padding: 8px 12px;
-            text-align: left;
-        }
-
-        .message-content th {
-            background: #f8fafc;
-            font-weight: 600;
-        }
-
-        .streaming-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 1em;
-            background: #4facfe;
-            animation: blink 1s infinite;
-            margin-left: 2px;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-
-        /* Scrollbar styling */
-        .messages-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .messages-container::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        .messages-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .messages-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        .input-area textarea::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .input-area textarea::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .input-area textarea::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .chat-header {
-                padding: 15px 20px;
-            }
-
-            .chat-header h2 {
-                font-size: 24px;
-            }
-
-            .messages-container {
-                padding: 20px;
-            }
-
-            .input-area {
-                padding: 15px 20px 20px 20px;
-            }
-
-            .message-content {
-                max-width: 85%;
-            }
-
-            .typing-indicator {
-                margin: 10px 20px;
-            }
-
-            .processing-indicator {
-                margin: 15px 20px;
-            }
-        }
+        #imagePreviewContainer { margin-bottom: 10px; } 
+        #imagePreviewImg { width: 60px; height: 60px; }
+        #removeImageBtn { width: 22px; height: 22px; font-size: 14px; }
+    }
+
+    @media (max-width: 480px) {
+        .chat-header h2 { font-size: 22px; }
+        .chat-header p { font-size: 14px; }
+        .message-content { max-width: 95%; padding: 10px 15px; font-size: 14px; }
+        .input-row { gap: 10px; }
+        .send-button, .image-upload-btn { width: 44px; height: 44px; font-size: 18px; }
+        .input-area textarea { min-height: 44px; font-size: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -499,25 +270,28 @@
       </div>
     </div>
 
+    <!-- Moved typing indicator inside the messages container for better visual flow -->
     <div class="typing-indicator" id="typingIndicator">
       <div class="typing-dots"><span></span><span></span><span></span></div>
     </div>
 
-    <div class="processing-indicator" id="processingIndicator">🔍 Analyzing image... Please wait</div>
-
     <div class="input-area">
-      <label for="imageInput" class="image-upload-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/>
-          <polyline points="21,15 16,10 5,21"/>
-        </svg>
-      </label>
-      <input type="file" id="imageInput" accept="image/*" style="display:none"/>
-      <div class="textarea-container">
-        <textarea id="userInput" placeholder="Ask me about my experience, skills, education... or upload an image" rows="1"></textarea>
+      <!-- Image Preview Section -->
+      <div id="imagePreviewContainer" style="display:none;">
+        <img id="imagePreviewImg" src="" alt="Image Preview"/>
+        <button id="removeImageBtn">&times;</button>
       </div>
-      <button class="send-button" id="sendButton">➤</button>
+      
+      <div class="input-row">
+        <label for="imageInput" class="image-upload-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+        </label>
+        <input type="file" id="imageInput" accept="image/*" style="display:none"/>
+        <div class="textarea-container">
+          <textarea id="userInput" placeholder="Ask a question or upload an image..." rows="1"></textarea>
+        </div>
+        <button class="send-button" id="sendButton" disabled>➤</button>
+      </div>
     </div>
   </div>
 
@@ -527,11 +301,12 @@
     const sendButton = document.getElementById('sendButton');
     const typingIndicator = document.getElementById('typingIndicator');
     const imageInput = document.getElementById('imageInput');
-    const processingIndicator = document.getElementById('processingIndicator');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreviewImg = document.getElementById('imagePreviewImg');
+    const removeImageBtn = document.getElementById('removeImageBtn');
 
     let sessionId = 'session_' + Date.now();
 
-    // Get current mode from URL parameters or sessionStorage
     function getCurrentMode() {
         const urlParams = new URLSearchParams(window.location.search);
         const modeFromURL = urlParams.get('mode');
@@ -541,15 +316,14 @@
             return modeFromURL;
         }
         const modeFromStorage = sessionStorage.getItem("chatMode");
-        console.log("DEBUG: Mode from storage:", modeFromStorage);
-        return modeFromStorage;
+        if (modeFromStorage) {
+            console.log("DEBUG: Mode from storage:", modeFromStorage);
+            return modeFromStorage;
+        }
+        console.log("DEBUG: No mode found, defaulting to 'resume'.");
+        return 'resume'; 
     }
 
-    // Initialize mode on page load
-    const currentMode = getCurrentMode();
-    console.log("DEBUG: Current mode on page load:", currentMode);
-
-    // Update header based on mode
     function updateHeaderForMode(mode) {
         const headerTitle = document.querySelector('.chat-header h2');
         const headerSubtitle = document.querySelector('.chat-header p');
@@ -568,12 +342,11 @@
                 headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready for interview practice';
                 break;
             default:
-                headerTitle.textContent = 'Resume Assistant';
-                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready to help';
+                headerTitle.textContent = 'General Assistant';
+                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • How can I help?';
         }
     }
 
-    // Update initial message based on mode
     function updateInitialMessage(mode) {
         const initialMessage = document.querySelector('.bot-message .message-content p');
         
@@ -587,70 +360,69 @@
             case 'interview':
                 initialMessage.textContent = 'Hello! I\'m your interview coach. I can help you practice common interview questions, improve your answers, and boost your confidence. Ready to practice?';
                 break;
-            default:
-                initialMessage.textContent = 'Hello! I\'m your resume assistant. I can help you with information about skills, experience, education, projects, and career goals. What would you like to know?';
+            default: 
+                initialMessage.textContent = 'Hello! I\'m a general assistant. How can I help you today?';
         }
     }
 
-    // Initialize UI based on mode
-    if (currentMode) {
-        updateHeaderForMode(currentMode);
-        updateInitialMessage(currentMode);
-    }
+    const initialMode = getCurrentMode(); 
+    updateHeaderForMode(initialMode);
+    updateInitialMessage(initialMode);
+
 
     // Auto-resize textarea
     function autoResizeTextarea() {
-      userInput.style.height = '52px';
-      const scrollHeight = userInput.scrollHeight;
-      const maxHeight = 200;
-      userInput.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+      userInput.style.height = 'auto'; 
+      userInput.style.height = userInput.scrollHeight + 'px';
       
-      // Update send button state
+      const maxHeight = 200;
+      if (userInput.scrollHeight > maxHeight) {
+        userInput.style.height = maxHeight + 'px';
+        userInput.style.overflowY = 'auto';
+      } else {
+        userInput.style.overflowY = 'hidden'; 
+      }
+      
       const hasText = userInput.value.trim().length > 0;
       sendButton.disabled = !hasText && !imageInput.files[0];
     }
 
-    // Initialize textarea
     userInput.addEventListener('input', autoResizeTextarea);
     userInput.addEventListener('paste', () => {
       setTimeout(autoResizeTextarea, 10);
     });
 
-    // Handle Enter key behavior
     userInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         if (e.shiftKey) {
-          // Shift+Enter = new line (default behavior)
           return;
         } else {
-          // Enter = send message
           e.preventDefault();
           sendMessage();
         }
       }
     });
 
-    // Add message
     function addMessage(content, isUser = false, imageData = null, isStreaming = false) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
 
-      let messageContent = '';
+      let messageContentHTML = '';
       if (imageData && isUser) {
-        messageContent = `
+        messageContentHTML = `
           <div class="uploaded-image">
             <img src="${imageData}" alt="Uploaded image" class="image-preview">
-            <p>Image uploaded for analysis</p>
+            ${content ? `<p>${content}</p>` : ''} <!-- Display user text if available -->
           </div>
         `;
       } else {
         const parsedContent = isUser ? content : marked.parse(content);
-        messageContent = `<div class="message-text">${parsedContent}${isStreaming ? '<span class="streaming-cursor"></span>' : ''}</div>`;
+        messageContentHTML = `<div class="message-text">${parsedContent}${isStreaming ? '<span class="streaming-cursor"></span>' : ''}</div>`;
       }
 
       messageDiv.innerHTML = `
         <div class="message-content">
-          ${messageContent}
+          ${messageContentHTML}
           <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
         </div>
       `;
@@ -665,24 +437,22 @@
       return messageDiv;
     }
 
-    // Update streaming message
     function updateStreamingMessage(messageElement, content, isComplete = false) {
       const messageTextDiv = messageElement.querySelector('.message-text');
-      const parsedContent = marked.parse(content);
-      messageTextDiv.innerHTML = `${parsedContent}${isComplete ? '' : '<span class="streaming-cursor"></span>'}`;
+      if (messageTextDiv) { 
+        const parsedContent = marked.parse(content);
+        messageTextDiv.innerHTML = `${parsedContent}${isComplete ? '' : '<span class="streaming-cursor"></span>'}`;
 
-      if (isComplete) {
-        messageElement.querySelectorAll('pre code').forEach(block => {
-          hljs.highlightElement(block);
-        });
+        if (isComplete) {
+          messageElement.querySelectorAll('pre code').forEach(block => {
+            hljs.highlightElement(block);
+          });
+        }
       }
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    // Indicators
-    function showProcessing(){ processingIndicator.classList.add('active'); }
-    function hideProcessing(){ processingIndicator.classList.remove('active'); }
-    function showTyping(){ typingIndicator.classList.add('active'); }
+    function showTyping(){ typingIndicator.classList.add('active'); messagesContainer.scrollTop = messagesContainer.scrollHeight; }
     function hideTyping(){ typingIndicator.classList.remove('active'); }
 
     async function sendToAPI(message, imageFile = null) {
@@ -692,14 +462,9 @@
         formData.append('session_id', sessionId);
         formData.append('stream', 'true');
         
-        // ADD MODE TO FORM DATA
-        const mode = getCurrentMode();
-        if (mode) {
-          formData.append('mode', mode);
-          console.log("DEBUG: Sending mode to API:", mode);
-        } else {
-          console.log("DEBUG: No mode found, using default");
-        }
+        const mode = getCurrentMode(); 
+        formData.append('mode', mode); 
+        console.log("DEBUG: Sending mode to API:", mode);
 
         if (imageFile) {
           formData.append('image', imageFile);
@@ -751,6 +516,8 @@
         console.error('API Error:', error);
         addMessage(error.message || "Error processing request.", false);
         return "";
+      } finally {
+        hideTyping();
       }
     }
 
@@ -763,38 +530,182 @@
       if (imageFile) {
         const reader = new FileReader();
         reader.onload = async function(e) {
-          addMessage('', true, e.target.result);
-          showProcessing();
-          await sendToAPI(message || "Please analyze this resume image", imageFile);
-          hideProcessing();
+          addMessage(message || "Image uploaded for analysis", true, e.target.result); 
+          userInput.value = ''; 
+          hideImagePreview();
+          autoResizeTextarea();
+          showTyping();
+          await sendToAPI(message || "Please analyze this image", imageFile);
         };
         reader.readAsDataURL(imageFile);
-        userInput.value = '';
-        imageInput.value = '';
-        autoResizeTextarea();
-        return;
-      }
-
-      if (message) {
+      } else if (message) { 
         addMessage(message, true);
         userInput.value = '';
         autoResizeTextarea();
         showTyping();
         await sendToAPI(message);
-        hideTyping();
       }
+      sendButton.disabled = true;
     }
 
-    // Listeners
+    imageInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreviewImg.src = e.target.result;
+          imagePreviewContainer.style.display = 'flex';
+          autoResizeTextarea();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        hideImagePreview();
+        autoResizeTextarea(); 
+      }
+    });
+
+    removeImageBtn.addEventListener('click', hideImagePreview);
+
+    function hideImagePreview() {
+      imageInput.value = ''; 
+      imagePreviewImg.src = '';
+      imagePreviewContainer.style.display = 'none';
+      autoResizeTextarea(); 
+    }
+
     sendButton.addEventListener('click', sendMessage);
 
-    // Initialize
     userInput.focus();
     autoResizeTextarea();
 
-    // Make functions available globally for debugging
-    window.debugModeState = debugModeState;
     window.getCurrentMode = getCurrentMode;
+
+    function extractTodoItems(text) {
+      console.log('=== CHECKING FOR TODO ITEMS ===');
+      console.log('Full text:', text);
+      
+      const regex = /\[ADD_TO_TODO\]([\s\S]*?)\[\/ADD_TO_TODO\]/g;
+      const matches = [];
+      let match;
+      
+      while ((match = regex.exec(text)) !== null) {
+        console.log('Found match:', match[0]);
+        console.log('JSON part:', match[1]);
+        try {
+          const jsonStr = match[1].trim();
+          const data = JSON.parse(jsonStr);
+          if (data.skill) {
+            console.log('Parsed successfully:', data);
+            matches.push(data);
+          }
+        } catch (e) {
+          console.error('Failed to parse TODO JSON:', match[1], e);
+        }
+      }
+      
+      console.log('Total matches found:', matches.length);
+      return matches;
+    }
+
+    function cleanResponseText(text) {
+      return text.replace(/\[ADD_TO_TODO\][\s\S]*?\[\/ADD_TO_TODO\]/g, '').trim();
+    }
+
+    async function addToTodoList(skill, reason, priority) {
+      try {
+        console.log('Adding to todo:', {skill, reason, priority});
+        const response = await fetch('/api/tasks/from-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text: skill,
+            reason: reason,
+            priority: priority || 'high'
+          })
+        });
+
+        const result = await response.json();
+        console.log('API response:', result);
+        
+        if (result.success) {
+          showNotification(`✓ Added "${skill}" to your to-do list!`, 'success');
+          return true;
+        } else {
+          showNotification('Failed: ' + (result.error || 'Unknown error'), 'error');
+          return false;
+        }
+      } catch (error) {
+        console.error('Error adding to todo:', error);
+        showNotification('Network error', 'error');
+        return false;
+      }
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        max-width: 350px;
+        font-size: 14px;
+      `;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      }, 4000);
+    }
+
+    if (!document.getElementById('notificationStyles')) {
+      const style = document.createElement('style');
+      style.id = 'notificationStyles';
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(400px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(400px); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const originalUpdateStreamingMessage = updateStreamingMessage;
+    updateStreamingMessage = function(messageElement, content, isComplete = false) {
+      const cleanedContent = cleanResponseText(content);
+      originalUpdateStreamingMessage(messageElement, cleanedContent, isComplete);
+      
+      if (isComplete) {
+        console.log('Stream complete, checking for todos...');
+        const todoItems = extractTodoItems(content);
+        if (todoItems.length > 0) {
+          console.log('Processing', todoItems.length, 'todo items');
+          todoItems.forEach((item, index) => {
+            setTimeout(() => {
+              addToTodoList(item.skill, item.reason, item.priority);
+            }, 500 * (index + 1));
+          });
+        } else {
+          console.log('No TODO items found in response');
+        }
+      }
+    };
+
+    console.log('TODO integration script loaded');
   </script>
 </body>
 </html>
