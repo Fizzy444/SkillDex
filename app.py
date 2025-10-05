@@ -106,7 +106,17 @@ def send_otp_email(email, otp_code, username):
         msg['From'] = EMAIL_USER
         msg['To'] = email
         msg['Subject'] = "SkillDEX Verification Code"
-        
+
+        template_path = os.path.join(os.path.dirname(__file__), 'templates', 'email.html')
+        try:
+            with open(template_path, 'r', encoding='utf-8') as f:
+                html_template = f.read()
+        except FileNotFoundError:
+            print(f"Error: Email template not found at {template_path}")
+            return False
+        except Exception as e:
+            print(f"Error reading email template file: {e}")
+            return False
         body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -356,19 +366,20 @@ def login():
         
         if user and bcrypt.check_password_hash(user.password, password):
             if not user.is_verified:
-                # OTP verification logic...
-                pass
+                flash("Your account is not verified. Please check your email for the OTP.", "warning")
+                # You might want to redirect to an OTP verification page here
+                return render_template('reg-log.html', form_type="login")
             else:
-                login_user(user, remember=True)  # Add remember=True
+                login_user(user, remember=True)
                 next_page = request.args.get('next') or url_for('dashboard')
                 
-                # Debug print
                 print(f"Login successful for {user.email}, redirecting to {next_page}")
                 print(f"User authenticated: {current_user.is_authenticated}")
                 
                 return redirect(next_page)
         else:
             flash("Invalid email or password. Please try again.", "danger")
+            return render_template('reg-log.html', form_type="login")
     
     return render_template('reg-log.html', form_type="login")
 
@@ -654,7 +665,6 @@ def get_task_stats():
         completed_tasks = Task.query.filter_by(user_id=current_user.id, completed=True).count()
         active_tasks = total_tasks - completed_tasks
         
-        # Get tasks created today
         today = datetime.utcnow().date()
         today_tasks = Task.query.filter_by(user_id=current_user.id).filter(
             db.func.date(Task.created_at) == today
@@ -670,7 +680,6 @@ def get_task_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Bulk operations
 @app.route("/api/tasks/bulk", methods=["POST"])
 @login_required
 def bulk_task_operations():
@@ -704,6 +713,54 @@ def bulk_task_operations():
         
         db.session.commit()
         return jsonify({'message': f'Bulk {operation} completed successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/api/tasks/from-chat", methods=["POST"])
+@login_required
+def add_task_from_chat():
+    try:
+        data = request.get_json()
+        
+        if not data or 'text' not in data:
+            return jsonify({'error': 'Task text is required'}), 400
+        
+        task_text = data['text'].strip()
+        if len(task_text) == 0:
+            return jsonify({'error': 'Task text cannot be empty'}), 400
+        
+        if len(task_text) > 200:
+            return jsonify({'error': 'Task text is too long (max 200 characters)'}), 400
+        
+        priority = data.get('priority', 'high')
+        if priority not in ['low', 'medium', 'high']:
+            priority = 'high'
+        
+        reason = data.get('reason', '')
+        if reason:
+            task_text = f"{task_text} ({reason[:50]})"
+        
+        new_task = Task(
+            user_id=current_user.id,
+            text=task_text,
+            priority=priority
+        )
+        
+        db.session.add(new_task)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'task': {
+                'id': new_task.id,
+                'text': new_task.text,
+                'completed': new_task.completed,
+                'priority': new_task.priority,
+                'createdAt': new_task.created_at.strftime('%Y-%m-%d %H:%M')
+            }
+        }), 201
         
     except Exception as e:
         db.session.rollback()
