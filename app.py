@@ -16,7 +16,6 @@ import secrets
 from PIL import Image
 import io
 import json
-from pyngrok import ngrok
 import redis
 from flask_session import Session
 
@@ -800,10 +799,5 @@ def debug_users():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+    app.run()
 
-    for tunnel in ngrok.get_tunnels():
-        ngrok.disconnect(tunnel.public_url)
-
-    public_url = ngrok.connect(addr=7860, proto="http")
-    print("Ngrok Public URL:", public_url)
-    app.run(port=7860)
