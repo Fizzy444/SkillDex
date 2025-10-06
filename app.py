@@ -1,5 +1,4 @@
 import os
-import resend
 from dotenv import load_dotenv
 import google.generativeai as genai
 import smtplib
@@ -20,20 +19,20 @@ import io
 import json
 import redis
 from flask_session import Session
-import ssl
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from prompt import Prompt
 
 load_dotenv(override=True)
 google_api_key = os.getenv('GEMINI_API_KEY')
-resend.api_key = os.getenv("RESEND_API_KEY")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USER = os.getenv('EMAIL_USER')
-EMAIL_PASS = os.getenv('EMAIL_PASS')
-SMTP_TIMEOUT = int(os.getenv('SMTP_TIMEOUT', '10'))
+# EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+# EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+# EMAIL_USER = os.getenv('EMAIL_USER')
+# EMAIL_PASS = os.getenv('EMAIL_PASS')
+# SMTP_TIMEOUT = int(os.getenv('SMTP_TIMEOUT', '10'))
 
 genai.configure(api_key=google_api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
@@ -134,6 +133,7 @@ def generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
 def send_otp_email(email, otp_code, username):
+    """Send OTP email using SendGrid (no domain needed)"""
     try:
         html_body = f"""
         <html>
@@ -162,19 +162,23 @@ def send_otp_email(email, otp_code, username):
         </html>
         """
 
-        resend.Emails.send({
-            "from": "SkillDEX <onboarding@resend.dev>",  # or your verified domain
-            "to": email,
-            "subject": "SkillDEX Verification Code",
-            "html": html_body
-        })
-        logger.info("OTP email sent to %s via Resend", email)
+        message = Mail(
+            from_email='skilldex.ai@gmail.com',  
+            to_emails=email,                  
+            subject='SkillDEX Verification Code',
+            html_content=html_body
+        )
+
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.send(message)
+        
+        logger.info(f"OTP email sent to {email} via SendGrid (status: {response.status_code})")
         return True
 
     except Exception as e:
-        logger.exception("Failed to send email via Resend: %s", e)
+        logger.exception("Failed to send email via SendGrid: %s", e)
         return False
-
+        
 @app.route("/chat_api", methods=["POST"])
 @login_required
 def chat_api():
@@ -815,6 +819,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
