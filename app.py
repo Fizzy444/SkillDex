@@ -48,13 +48,27 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'skdex_session:'
 redis_url = os.getenv("REDIS_URL")
-if redis_url:
-    if redis_url.startswith("rediss://"):
-        app.config['SESSION_REDIS'] = redis.from_url(redis_url, ssl=True, ssl_cert_reqs=None, decode_responses=True)
-    else:
-        app.config['SESSION_REDIS'] = redis.from_url(redis_url, decode_responses=True)
+if not redis_url:
+    logger.warning("REDIS_URL not set — using filesystem sessions as fallback.")
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config.pop('SESSION_REDIS', None)
 else:
-    print("⚠️ REDIS_URL not set!")
+    try:
+        # Handle Render's rediss:// (SSL) and plain redis://
+        if redis_url.startswith("rediss://"):
+            redis_client = redis.from_url(redis_url, ssl=True, ssl_cert_reqs=None, decode_responses=True)
+        else:
+            redis_client = redis.from_url(redis_url, decode_responses=True)
+
+        # quick liveness check
+        redis_client.ping()
+        logger.info("Connected to Redis successfully.")
+        app.config['SESSION_REDIS'] = redis_client
+
+    except Exception as e:
+        logger.exception("Failed to connect to Redis — falling back to filesystem sessions. Error: %s", e)
+        app.config['SESSION_TYPE'] = 'filesystem'
+        app.config.pop('SESSION_REDIS', None)
 db = SQLAlchemy(app)
 sess = Session(app)
 bcrypt = Bcrypt(app)
@@ -796,6 +810,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
