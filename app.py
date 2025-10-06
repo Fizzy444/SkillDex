@@ -74,8 +74,8 @@ else:
         redis_client.ping()
         logger.info("Connected to Redis successfully.")
         
-        redis_client.flushdb()
-        logger.info("Redis database flushed - all old sessions cleared.")
+        #redis_client.flushdb()
+        #logger.info("Redis database flushed - all old sessions cleared.")
         
         app.config['SESSION_REDIS'] = redis_client
     except Exception as e:
@@ -835,6 +835,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
