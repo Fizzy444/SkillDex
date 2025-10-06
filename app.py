@@ -354,7 +354,7 @@ def register():
             session.pop('pending_registration', None)
             return render_template('reg-log.html', form_type="register")
 
-        email_sent = send_otp_email(email, otp_code, username, timeout=10)
+        email_sent = send_otp_email(email, otp_code, username)
 
         session['otp_email'] = email
         session['verification_context'] = 'register'
@@ -823,6 +823,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
