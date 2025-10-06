@@ -47,7 +47,14 @@ app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'skdex_session:'
-app.config['SESSION_REDIS'] = redis.from_url(os.getenv('REDIS_URL'))
+redis_url = os.getenv("REDIS_URL")
+if redis_url:
+    if redis_url.startswith("rediss://"):
+        app.config['SESSION_REDIS'] = redis.from_url(redis_url, ssl=True, ssl_cert_reqs=None, decode_responses=True)
+    else:
+        app.config['SESSION_REDIS'] = redis.from_url(redis_url, decode_responses=True)
+else:
+    print("⚠️ REDIS_URL not set!")
 db = SQLAlchemy(app)
 sess = Session(app)
 bcrypt = Bcrypt(app)
@@ -789,6 +796,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
