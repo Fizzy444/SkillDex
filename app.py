@@ -1,4 +1,5 @@
 import os
+import resend
 from dotenv import load_dotenv
 import google.generativeai as genai
 import smtplib
@@ -24,6 +25,7 @@ from prompt import Prompt
 
 load_dotenv(override=True)
 google_api_key = os.getenv('GEMINI_API_KEY')
+resend.api_key = os.getenv("RESEND_API_KEY")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -837,6 +839,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
