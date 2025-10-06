@@ -58,7 +58,12 @@ if not redis_url:
 else:
     try:
         if redis_url.startswith("rediss://"):
-            redis_client = redis.from_url(redis_url, ssl=True, ssl_cert_reqs=None, decode_responses=True)
+            redis_client = redis.from_url(
+                redis_url, 
+                ssl=True, 
+                ssl_cert_reqs=None, 
+                decode_responses=True
+            )
         else:
             redis_client = redis.from_url(redis_url, decode_responses=True)
 
@@ -826,6 +831,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
