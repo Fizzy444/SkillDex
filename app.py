@@ -19,6 +19,7 @@ import io
 import json
 import redis
 from flask_session import Session
+import ssl
 from prompt import Prompt
 
 load_dotenv(override=True)
@@ -30,6 +31,7 @@ EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
 EMAIL_USER = os.getenv('EMAIL_USER')
 EMAIL_PASS = os.getenv('EMAIL_PASS')
+SMTP_TIMEOUT = int(os.getenv('SMTP_TIMEOUT', '10'))
 
 genai.configure(api_key=google_api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
@@ -174,11 +176,11 @@ def send_otp_email(email, otp_code, username):
         
         msg.attach(MIMEText(body, 'html'))
         old_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(timeout)
+        socket.setdefaulttimeout(SMTP_TIMEOUT)
 
         try:
             context = ssl.create_default_context()
-            server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=timeout)
+            server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=SMTP_TIMEOUT)
             server.set_debuglevel(0)
             server.ehlo()
             server.starttls(context=context)
@@ -835,6 +837,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
