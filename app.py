@@ -161,13 +161,24 @@ def send_otp_email(email, otp_code, username):
         """
         
         msg.attach(MIMEText(body, 'html'))
-        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-        server.starttls()
-        server.login(EMAIL_USER, EMAIL_PASS)
-        server.send_message(msg)
-        server.quit()
-        
-        return True
+        old_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(timeout)
+
+        try:
+            context = ssl.create_default_context()
+            server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=timeout)
+            server.set_debuglevel(0)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+            server.login(EMAIL_USER, EMAIL_PASS)
+            server.send_message(msg)
+            server.quit()
+            logger.info("OTP email sent to %s", email)
+            return True
+        finally:
+            socket.setdefaulttimeout(old_timeout)
+
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
@@ -309,30 +320,19 @@ def register():
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form.get('confirm_password')
-        
-        if len(username) < 3:
-            flash("Username must be at least 3 characters long.", "danger")
-            return render_template('reg-log.html', form_type="register")
-        
-        if len(password) < 6:
-            flash("Password must be at least 6 characters long.", "danger")
-            return render_template('reg-log.html', form_type="register")
-            
-        if password != confirm_password:
-            flash("Passwords do not match.", "danger")
-            return render_template('reg-log.html', form_type="register")
-        
+
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash("Email already registered. Please use a different email or login.", "danger")
             return render_template('reg-log.html', form_type="register")
-            
+
         existing_username = User.query.filter_by(username=username).first()
         if existing_username:
             flash("Username already taken. Please choose a different username.", "danger")
             return render_template('reg-log.html', form_type="register")
-        
+
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+
         session['pending_registration'] = {
             'username': username,
             'email': email,
@@ -341,22 +341,32 @@ def register():
 
         otp_code = generate_otp()
         expires_at = datetime.utcnow() + timedelta(minutes=10)
-        OTP.query.filter_by(email=email).delete() 
-        otp_record = OTP(email=email, otp_code=otp_code, expires_at=expires_at)
-        db.session.add(otp_record)
-        db.session.commit()
 
-        if send_otp_email(email, otp_code, username):
-            session['otp_email'] = email
-            session['verification_context'] = 'register'
-            flash("A verification code has been sent to your email to complete your registration.", "info")
-            return redirect(url_for('verify_otp'))
-        else:
-            flash("Failed to send verification email. Please try again.", "danger")
-            session.pop('pending_registration', None) 
+        try:
+            OTP.query.filter_by(email=email).delete()
+            otp_record = OTP(email=email, otp_code=otp_code, expires_at=expires_at)
+            db.session.add(otp_record)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            logger.exception("DB error when creating OTP: %s", e)
+            flash("Server error. Please try again.", "danger")
+            session.pop('pending_registration', None)
             return render_template('reg-log.html', form_type="register")
 
+        email_sent = send_otp_email(email, otp_code, username, timeout=10)
+
+        session['otp_email'] = email
+        session['verification_context'] = 'register'
+
+        if email_sent:
+            flash("A verification code has been sent to your email to complete your registration.", "info")
+        else:
+            flash("Could not send verification email right now. Please use 'Resend code' or try again shortly.", "warning")
+        return redirect(url_for('verify_otp'))
+
     return render_template('reg-log.html', form_type="register")
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -813,6 +823,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
