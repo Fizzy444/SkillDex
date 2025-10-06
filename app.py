@@ -134,39 +134,25 @@ def generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
 def send_otp_email(email, otp_code, username):
-    """Send OTP email to user"""
     try:
-        if not EMAIL_USER or not EMAIL_PASS:
-            print("Email credentials not configured")
-            return False
-            
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_USER
-        msg['To'] = email
-        msg['Subject'] = "SkillDEX Verification Code"
-
-        body = f"""
+        html_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
                 <h1 style="color: white; margin: 0; font-size: 28px;">SkillDEX</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0;">Your AI Career Companion</p>
             </div>
-            
             <div style="background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <h2 style="color: #374151; margin-top: 0;">Hi {username}!</h2>
                 <p style="color: #6b7280; line-height: 1.6;">Please use the verification code below to complete your action:</p>
-                
                 <div style="background: #f8fafc; border: 2px dashed #e5e7eb; padding: 20px; text-align: center; margin: 25px 0; border-radius: 8px;">
                     <h1 style="color: #4f46e5; font-size: 36px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">{otp_code}</h1>
                 </div>
-                
                 <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
                     • This code will expire in <strong>10 minutes</strong><br>
                     • Don't share this code with anyone<br>
                     • If you didn't request this, please ignore this email
                 </p>
-                
                 <hr style="border: none; height: 1px; background: #e5e7eb; margin: 25px 0;">
                 <p style="color: #9ca3af; font-size: 12px; text-align: center;">
                     This is an automated message from SkillDEX. Please do not reply to this email.
@@ -175,28 +161,18 @@ def send_otp_email(email, otp_code, username):
         </body>
         </html>
         """
-        
-        msg.attach(MIMEText(body, 'html'))
-        old_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(SMTP_TIMEOUT)
 
-        try:
-            context = ssl.create_default_context()
-            server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT, timeout=SMTP_TIMEOUT)
-            server.set_debuglevel(0)
-            server.ehlo()
-            server.starttls(context=context)
-            server.ehlo()
-            server.login(EMAIL_USER, EMAIL_PASS)
-            server.send_message(msg)
-            server.quit()
-            logger.info("OTP email sent to %s", email)
-            return True
-        finally:
-            socket.setdefaulttimeout(old_timeout)
+        resend.Emails.send({
+            "from": "SkillDEX <onboarding@resend.dev>",  # or your verified domain
+            "to": email,
+            "subject": "SkillDEX Verification Code",
+            "html": html_body
+        })
+        logger.info("OTP email sent to %s via Resend", email)
+        return True
 
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        logger.exception("Failed to send email via Resend: %s", e)
         return False
 
 @app.route("/chat_api", methods=["POST"])
@@ -839,6 +815,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
