@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 import random
 import string
 from datetime import datetime, timedelta
-
+import logging
 from flask import Flask, render_template, request, jsonify, Response, redirect, url_for, flash, session
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
@@ -23,6 +23,9 @@ from prompt import Prompt
 
 load_dotenv(override=True)
 google_api_key = os.getenv('GEMINI_API_KEY')
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
@@ -810,6 +813,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
