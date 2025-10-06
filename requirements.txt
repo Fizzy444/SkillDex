@@ -71,7 +71,7 @@ pytz==2025.2
 PyYAML==6.0.2
 redis==6.4.0
 requests==2.32.5
-resend==2.15.0
+sendgrid==6.11.0
 rich==14.1.0
 rsa==4.9.1
 ruff==0.12.10
@@ -95,4 +95,5 @@ waitress==3.0.2
 watchdog==6.0.0
 websockets==15.0.1
 Werkzeug==3.1.3
+
 
