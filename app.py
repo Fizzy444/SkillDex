@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import google.generativeai as genai
 import smtplib
+import socket 
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import random
@@ -18,12 +19,10 @@ import io
 import json
 import redis
 from flask_session import Session
-
 from prompt import Prompt
 
 load_dotenv(override=True)
 google_api_key = os.getenv('GEMINI_API_KEY')
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,6 @@ EMAIL_PASS = os.getenv('EMAIL_PASS')
 genai.configure(api_key=google_api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 chat_sessions = {}
-
 system_message1 = Prompt.prompt1
 system_message2 = Prompt.prompt2
 system_message3 = Prompt.prompt3
@@ -45,11 +43,17 @@ app.config['SECRET_KEY'] = secrets.token_hex(32)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'skdex_session:'
+app.config['SESSION_SERIALIZATION_FORMAT'] = 'json'
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
 redis_url = os.getenv("REDIS_URL")
 if not redis_url:
     logger.warning("REDIS_URL not set — using filesystem sessions as fallback.")
@@ -66,27 +70,27 @@ else:
             )
         else:
             redis_client = redis.from_url(redis_url, decode_responses=True)
-
+        
         redis_client.ping()
         logger.info("Connected to Redis successfully.")
         
         redis_client.flushdb()
-        logger.info("Redis database flushed.")
+        logger.info("Redis database flushed - all old sessions cleared.")
         
         app.config['SESSION_REDIS'] = redis_client
-
     except Exception as e:
         logger.exception("Failed to connect to Redis — falling back to filesystem sessions. Error: %s", e)
         app.config['SESSION_TYPE'] = 'filesystem'
         app.config.pop('SESSION_REDIS', None)
-        
-db = SQLAlchemy(app)
-sess = Session(app)
-bcrypt = Bcrypt(app)
-login_manager = LoginManager(app)
 
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+
+sess = Session(app)
+
+login_manager = LoginManager(app)
 login_manager.session_protection = "strong"
-login_manager.login_message_category = "info"       
+login_manager.login_message_category = "info" 
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -831,6 +835,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
