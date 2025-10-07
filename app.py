@@ -166,8 +166,7 @@ def send_otp_email(email, otp_code, username):
             from_email=('SkillDEX Team', 'skilldex.ai@gmail.com'),  # 👈 This format
             to_emails=email,
             subject='SkillDEX Verification Code',
-            html_content=html_body,
-            plain_text_content=plain_text_body
+            html_content=html_body
         )
 
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
@@ -820,6 +819,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
