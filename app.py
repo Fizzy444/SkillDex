@@ -802,7 +802,10 @@ def too_large(e):
     return jsonify({"error": "File too large. Maximum size is 16MB."}), 413
 
 @app.route("/debug/session")
+@login_required
 def debug_session():
+    if current_user.email != "skilldex.ai@gmail.com":
+        return jsonify({"error": "Access denied"}), 403
     return jsonify({
         'session': dict(session),
         'user_authenticated': current_user.is_authenticated if current_user.is_authenticated else False,
@@ -810,7 +813,10 @@ def debug_session():
     })
 
 @app.route("/debug/users")
+@login_required
 def debug_users():
+    if current_user.email != "skilldex.ai@gmail.com":
+        return jsonify({"error": "Access denied"}), 403
     users = User.query.all()
     users_data = [{'id': u.id, 'email': u.email, 'is_verified': u.is_verified} for u in users]
     return jsonify(users_data)
@@ -819,6 +825,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
