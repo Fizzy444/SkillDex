@@ -163,7 +163,7 @@ def send_otp_email(email, otp_code, username):
         """
 
         message = Mail(
-            from_email=('SkillDEX Team', 'skilldex.ai@gmail.com'),  # 👈 This format
+            from_email=('skilldex.ai@gmail.com'), 
             to_emails=email,
             subject='SkillDEX Verification Code',
             html_content=html_body
@@ -819,6 +819,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
