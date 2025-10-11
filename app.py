@@ -781,7 +781,7 @@ def logout():
     username = current_user.username
     logout_user()
     flash(f"Goodbye, {username}! You have been logged out.", "info")
-    return redirect(url_for('home'))
+    return redirect(url_for('login'))
 
 @app.route("/health")
 def health_check():
@@ -825,6 +825,7 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
