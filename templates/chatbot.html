@@ -136,7 +136,7 @@
     .input-area textarea:focus { border-color: #4facfe; box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1); }
     .input-area textarea::placeholder { color: #9ca3af; }
 
-    .send-button, .image-upload-btn {
+    .send-button, .file-upload-btn {
         border-radius: 50%;
         width: 52px;
         height: 52px;
@@ -156,46 +156,159 @@
     .send-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4); }
     .send-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3); }
 
-    .image-upload-btn { background: #f8fafc; border: 2px solid #e2e8f0; color: #64748b; }
-    .image-upload-btn:hover { background: #e0e0e0; border-color: #c0c0c0; }
+    .file-upload-btn { background: #f8fafc; border: 2px solid #e2e8f0; color: #64748b; }
+    .file-upload-btn:hover { background: #e0e0e0; border-color: #c0c0c0; }
 
-    #imagePreviewContainer {
+    #filePreviewContainer {
         display: flex; 
         align-items: center; 
         gap: 10px; 
-        padding: 10px;
-        border: 1px solid #e2e8f0;
+        padding: 10px 15px;
+        background: #f8fafc;
+        border: 2px dashed #e2e8f0;
         border-radius: 12px;
         margin-bottom: 15px; 
         width: fit-content;
+        max-width: 100%;
     }
-    #imagePreviewImg { 
+    
+    .file-preview-content {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    #filePreviewImg { 
         width: 80px; 
         height: 80px; 
         object-fit: cover; 
         border-radius: 8px; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    #removeImageBtn {
+    
+    .pdf-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: white;
+        font-weight: bold;
+        font-size: 24px;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+    
+    .pdf-icon-text {
+        font-size: 12px;
+        margin-top: 4px;
+        opacity: 0.9;
+    }
+    
+    .file-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .file-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-bottom: 4px;
+    }
+    
+    .file-size {
+        font-size: 12px;
+        color: #64748b;
+    }
+    
+    #removeFileBtn {
         background: #ef4444;
         color: white; 
         border: none; 
         border-radius: 50%;
-        width: 28px;
-        height: 28px; 
+        width: 32px;
+        height: 32px; 
         cursor: pointer; 
-        font-size: 18px; 
+        font-size: 20px; 
         display: flex; 
         align-items: center; 
         justify-content: center;
-        transition: background 0.2s ease;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
     }
-    #removeImageBtn:hover {
+    #removeFileBtn:hover {
         background: #dc2626;
+        transform: scale(1.1);
     }
 
-    .uploaded-image { display: flex; flex-direction: column; align-items: flex-end; }
-    .image-preview { max-width: 200px; max-height: 200px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
-    .uploaded-image p { 
+    .uploaded-file { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: flex-end; 
+    }
+    
+    .image-preview { 
+        max-width: 200px; 
+        max-height: 200px; 
+        border-radius: 10px; 
+        margin-bottom: 10px; 
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
+    }
+    
+    .pdf-preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        margin-bottom: 10px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .pdf-preview-icon {
+        width: 48px;
+        height: 48px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: #ef4444;
+        font-weight: bold;
+        font-size: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .pdf-preview-info {
+        flex: 1;
+        color: white;
+    }
+    
+    .pdf-preview-name {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .pdf-preview-size {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+    
+    .uploaded-file p { 
         margin-top: 0; 
         padding-top: 10px; 
         border-top: 1px solid rgba(255,255,255,0.2);
@@ -233,13 +346,13 @@
         .messages-container { padding: 15px; } 
         .input-area { padding: 10px 15px 15px 15px; }
         .message-content { max-width: 90%; padding: 12px 18px; font-size: 15px; }
-        .send-button, .image-upload-btn { width: 48px; height: 48px; }
+        .send-button, .file-upload-btn { width: 48px; height: 48px; }
         .input-area textarea { padding: 12px 18px; min-height: 48px; font-size: 15px; } 
         .typing-indicator { margin: 10px 15px; }
         
-        #imagePreviewContainer { margin-bottom: 10px; } 
-        #imagePreviewImg { width: 60px; height: 60px; }
-        #removeImageBtn { width: 22px; height: 22px; font-size: 14px; }
+        #filePreviewContainer { margin-bottom: 10px; } 
+        #filePreviewImg, .pdf-icon { width: 60px; height: 60px; }
+        #removeFileBtn { width: 28px; height: 28px; font-size: 16px; }
     }
 
     @media (max-width: 480px) {
@@ -247,7 +360,7 @@
         .chat-header p { font-size: 14px; }
         .message-content { max-width: 95%; padding: 10px 15px; font-size: 14px; }
         .input-row { gap: 10px; }
-        .send-button, .image-upload-btn { width: 44px; height: 44px; font-size: 18px; }
+        .send-button, .file-upload-btn { width: 44px; height: 44px; font-size: 18px; }
         .input-area textarea { min-height: 44px; font-size: 14px; }
     }
   </style>
@@ -275,19 +388,31 @@
     </div>
 
     <div class="input-area">
-      <!-- Image Preview Section -->
-      <div id="imagePreviewContainer" style="display:none;">
-        <img id="imagePreviewImg" src="" alt="Image Preview"/>
-        <button id="removeImageBtn">&times;</button>
+      <!-- File Preview Section -->
+      <div id="filePreviewContainer" style="display:none;">
+        <div class="file-preview-content">
+          <img id="filePreviewImg" src="" alt="Image Preview" style="display:none;"/>
+          <div id="pdfPreviewIcon" class="pdf-icon" style="display:none;">
+            <span>PDF</span>
+            <span class="pdf-icon-text">Document</span>
+          </div>
+          <div class="file-info">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+          </div>
+        </div>
+        <button id="removeFileBtn">&times;</button>
       </div>
       
       <div class="input-row">
-        <label for="imageInput" class="image-upload-btn">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>
+        <label for="fileInput" class="file-upload-btn" title="Upload image or PDF">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+          </svg>
         </label>
-        <input type="file" id="imageInput" accept="image/*" style="display:none"/>
+        <input type="file" id="fileInput" accept="image/*,application/pdf,.pdf" style="display:none"/>
         <div class="textarea-container">
-          <textarea id="userInput" placeholder="Ask a question or upload an image..." rows="1"></textarea>
+          <textarea id="userInput" placeholder="Ask a question or upload a file..." rows="1"></textarea>
         </div>
         <button class="send-button" id="sendButton" disabled>➤</button>
       </div>
@@ -299,12 +424,16 @@
     const userInput = document.getElementById('userInput');
     const sendButton = document.getElementById('sendButton');
     const typingIndicator = document.getElementById('typingIndicator');
-    const imageInput = document.getElementById('imageInput');
-    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-    const imagePreviewImg = document.getElementById('imagePreviewImg');
-    const removeImageBtn = document.getElementById('removeImageBtn');
+    const fileInput = document.getElementById('fileInput');
+    const filePreviewContainer = document.getElementById('filePreviewContainer');
+    const filePreviewImg = document.getElementById('filePreviewImg');
+    const pdfPreviewIcon = document.getElementById('pdfPreviewIcon');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFileBtn');
 
     let sessionId = 'session_' + Date.now();
+    let currentFile = null;
 
     function getCurrentMode() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -368,8 +497,14 @@
     updateHeaderForMode(initialMode);
     updateInitialMessage(initialMode);
 
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
 
-    // Auto-resize textarea
     function autoResizeTextarea() {
       userInput.style.height = 'auto'; 
       userInput.style.height = userInput.scrollHeight + 'px';
@@ -383,7 +518,7 @@
       }
       
       const hasText = userInput.value.trim().length > 0;
-      sendButton.disabled = !hasText && !imageInput.files[0];
+      sendButton.disabled = !hasText && !currentFile;
     }
 
     userInput.addEventListener('input', autoResizeTextarea);
@@ -402,18 +537,35 @@
       }
     });
 
-    function addMessage(content, isUser = false, imageData = null, isStreaming = false) {
+    function addMessage(content, isUser = false, fileData = null, fileType = null, isStreaming = false) {
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
 
       let messageContentHTML = '';
-      if (imageData && isUser) {
-        messageContentHTML = `
-          <div class="uploaded-image">
-            <img src="${imageData}" alt="Uploaded image" class="image-preview">
-            ${content ? `<p>${content}</p>` : ''} <!-- Display user text if available -->
-          </div>
-        `;
+      if (fileData && isUser) {
+        if (fileType === 'image') {
+          messageContentHTML = `
+            <div class="uploaded-file">
+              <img src="${fileData.url}" alt="Uploaded image" class="image-preview">
+              ${content ? `<p>${content}</p>` : ''}
+            </div>
+          `;
+        } else if (fileType === 'pdf') {
+          messageContentHTML = `
+            <div class="uploaded-file">
+              <div class="pdf-preview">
+                <div class="pdf-preview-icon">
+                  <span>PDF</span>
+                </div>
+                <div class="pdf-preview-info">
+                  <div class="pdf-preview-name">${fileData.name}</div>
+                  <div class="pdf-preview-size">${fileData.size}</div>
+                </div>
+              </div>
+              ${content ? `<p>${content}</p>` : ''}
+            </div>
+          `;
+        }
       } else {
         const parsedContent = isUser ? content : marked.parse(content);
         messageContentHTML = `<div class="message-text">${parsedContent}${isStreaming ? '<span class="streaming-cursor"></span>' : ''}</div>`;
@@ -454,7 +606,7 @@
     function showTyping(){ typingIndicator.classList.add('active'); messagesContainer.scrollTop = messagesContainer.scrollHeight; }
     function hideTyping(){ typingIndicator.classList.remove('active'); }
 
-    async function sendToAPI(message, imageFile = null) {
+    async function sendToAPI(message, file = null) {
       try {
         const formData = new FormData();
         formData.append('message', message);
@@ -465,14 +617,15 @@
         formData.append('mode', mode); 
         console.log("DEBUG: Sending mode to API:", mode);
 
-        if (imageFile) {
-          formData.append('image', imageFile);
-          const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/bmp','image/webp'];
-          if (!allowedTypes.includes(imageFile.type.toLowerCase())) {
-            throw new Error(`Unsupported file type: ${imageFile.type}.`);
+        if (file) {
+          formData.append('image', file);
+          
+          const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/bmp','image/webp','application/pdf'];
+          if (!allowedTypes.includes(file.type.toLowerCase())) {
+            throw new Error(`Unsupported file type: ${file.type}`);
           }
-          if (imageFile.size > 16 * 1024 * 1024) {
-            throw new Error('File too large. Max 16MB.');
+          if (file.size > 16 * 1024 * 1024) {
+            throw new Error('File too large. Maximum size is 16MB.');
           }
         }
 
@@ -501,7 +654,7 @@
                 if (data.accumulated) {
                   finalResponse = data.accumulated;
                   if (!botMessageElement) {
-                    botMessageElement = addMessage(finalResponse, false, null, true);
+                    botMessageElement = addMessage(finalResponse, false, null, null, true);
                   } else {
                     updateStreamingMessage(botMessageElement, finalResponse, false);
                   }
@@ -520,24 +673,37 @@
       }
     }
 
-    // Send message
     async function sendMessage() {
       const message = userInput.value.trim();
-      const imageFile = imageInput.files[0];
-      if (!message && !imageFile) return;
+      const file = currentFile;
+      if (!message && !file) return;
 
-      if (imageFile) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          addMessage(message || "Image uploaded for analysis", true, e.target.result); 
-          userInput.value = ''; 
-          hideImagePreview();
+      if (file) {
+        const fileType = file.type.startsWith('image/') ? 'image' : 'pdf';
+        
+        if (fileType === 'image') {
+          const reader = new FileReader();
+          reader.onload = async function(e) {
+            addMessage(message || "Image uploaded for analysis", true, {url: e.target.result}, 'image');
+            userInput.value = '';
+            hideFilePreview();
+            autoResizeTextarea();
+            showTyping();
+            await sendToAPI(message || "Please analyze this image", file);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          addMessage(message || "PDF uploaded for analysis", true, {
+            name: file.name,
+            size: formatFileSize(file.size)
+          }, 'pdf');
+          userInput.value = '';
+          hideFilePreview();
           autoResizeTextarea();
           showTyping();
-          await sendToAPI(message || "Please analyze this image", imageFile);
-        };
-        reader.readAsDataURL(imageFile);
-      } else if (message) { 
+          await sendToAPI(message || "Please analyze this PDF document", file);
+        }
+      } else if (message) {
         addMessage(message, true);
         userInput.value = '';
         autoResizeTextarea();
@@ -547,29 +713,48 @@
       sendButton.disabled = true;
     }
 
-    imageInput.addEventListener('change', function() {
+    fileInput.addEventListener('change', function() {
       if (this.files && this.files[0]) {
         const file = this.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          imagePreviewImg.src = e.target.result;
-          imagePreviewContainer.style.display = 'flex';
+        currentFile = file;
+        
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            filePreviewImg.src = e.target.result;
+            filePreviewImg.style.display = 'block';
+            pdfPreviewIcon.style.display = 'none';
+            filePreviewContainer.style.display = 'flex';
+            autoResizeTextarea();
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+          filePreviewImg.style.display = 'none';
+          pdfPreviewIcon.style.display = 'flex';
+          filePreviewContainer.style.display = 'flex';
           autoResizeTextarea();
-        };
-        reader.readAsDataURL(file);
+        }
       } else {
-        hideImagePreview();
-        autoResizeTextarea(); 
+        hideFilePreview();
+        autoResizeTextarea();
       }
     });
 
-    removeImageBtn.addEventListener('click', hideImagePreview);
+    removeFileBtn.addEventListener('click', hideFilePreview);
 
-    function hideImagePreview() {
-      imageInput.value = ''; 
-      imagePreviewImg.src = '';
-      imagePreviewContainer.style.display = 'none';
-      autoResizeTextarea(); 
+    function hideFilePreview() {
+      fileInput.value = '';
+      currentFile = null;
+      filePreviewImg.src = '';
+      filePreviewImg.style.display = 'none';
+      pdfPreviewIcon.style.display = 'none';
+      fileName.textContent = '';
+      fileSize.textContent = '';
+      filePreviewContainer.style.display = 'none';
+      autoResizeTextarea();
     }
 
     sendButton.addEventListener('click', sendMessage);
@@ -704,8 +889,7 @@
       }
     };
 
-    console.log('TODO integration script loaded');
+    console.log('TODO integration script loaded with PDF support');
   </script>
 </body>
 </html>
-
