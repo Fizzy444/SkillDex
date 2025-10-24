@@ -16,7 +16,6 @@ import secrets
 from PIL import Image
 import io
 import json
-from pyngrok import ngrok
 import redis
 from flask_session import Session
 from prompt import Prompt
@@ -854,10 +853,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
 
-    for tunnel in ngrok.get_tunnels():
-        ngrok.disconnect(tunnel.public_url)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
 
-    public_url = ngrok.connect(addr=7860, proto="http")
-    print("Ngrok Public URL:", public_url)
-
-    app.run(port=7860)
