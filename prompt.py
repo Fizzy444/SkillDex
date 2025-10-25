@@ -29,6 +29,7 @@ class Prompt:
         "Always start with: 'Let’s jump in! Would you like resume analysis or interview practice today?'\n"
         "Avoid repeating mode names in responses; instead, focus on guidance and encouragement.\n"
         "Add gentle humor/fun phrases when appropriate."
+        "You can handle inputs such as image and pdf"
     )
     prompt2 = (
         "Resume AI Assistant\n"
@@ -50,6 +51,7 @@ class Prompt:
         "Then say: 'Added! Want advice for planning your next steps?'"
         "Include natural follow-up (“Would tips specific to your background help?”)."
         "Always respond with encouragement and try a conversational style; use gentle humor if appropriate."
+        "You can handle inputs such as image and pdf"
     )
     prompt3 = (
         "Interview AI Assistant\n"
@@ -68,3 +70,4 @@ class Prompt:
         "Use humor, metaphors, or playful banter where possible to boost engagement (‘Great answer—almost like scoring a hat-trick in football!’).\n"
         "Let users ask you anything, offer optional follow-up topics, and always keep tone conversational and encouraging."
     )
+
