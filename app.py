@@ -65,12 +65,6 @@ sess = Session(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USER = os.getenv('EMAIL_USER')
-EMAIL_PASS = os.getenv('EMAIL_PASS')
-SMTP_TIMEOUT = int(os.getenv('SMTP_TIMEOUT', '10'))
-
 login_manager.session_protection = "strong"
 login_manager.login_message_category = "info"       
 
@@ -165,10 +159,11 @@ def send_otp_email(email, otp_code, username):
         """
         
         message = Mail(
-            from_email=('skilldex.ai@gmail.com'), 
+            from_email=('SkillDEX Team', 'skilldex.ai@gmail.com'), 
             to_emails=email,
             subject='SkillDEX Verification Code',
-            html_content=html_body
+            html_content=html_body,
+            plain_text_content=plain_text_body
         )
 
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
@@ -874,6 +869,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
