@@ -41,31 +41,19 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 app.config['SESSION_TYPE'] = 'redis'
 redis_url = os.getenv('REDIS_URL')
-redis_url = os.getenv("REDIS_URL")
-if not redis_url:
-    logger.warning("REDIS_URL not set — using filesystem sessions as fallback.")
-    app.config['SESSION_TYPE'] = 'filesystem'
-    app.config.pop('SESSION_REDIS', None)
-else:
+if redis_url:
     try:
-        if redis_url.startswith("rediss://"):
-            redis_client = redis.from_url(
-                redis_url, 
-                ssl=True, 
-                ssl_cert_reqs=None, 
-                decode_responses=True
-            )
-        else:
-            redis_client = redis.from_url(redis_url, decode_responses=True)
-
-        redis_client.ping()
-        logger.info("Connected to Redis successfully.")
-
-        app.config['SESSION_REDIS'] = redis_client
+        app.config['SESSION_TYPE'] = 'redis'
+        app.config['SESSION_REDIS'] = redis.from_url(redis_url)
+        print("✓ Using Redis for sessions")
     except Exception as e:
-        logger.exception("Failed to connect to Redis — falling back to filesystem sessions. Error: %s", e)
+        print(f"Redis connection failed: {e}, falling back to filesystem")
         app.config['SESSION_TYPE'] = 'filesystem'
-        app.config.pop('SESSION_REDIS', None)
+        app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+else:
+    print("⚠ REDIS_URL not found, using filesystem sessions")
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
 
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
@@ -880,6 +868,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
