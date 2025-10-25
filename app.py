@@ -37,16 +37,31 @@ system_message2 = Prompt.prompt2
 system_message3 = Prompt.prompt3
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = secrets.token_hex(32)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', secrets.token_hex(32))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 app.config['SESSION_TYPE'] = 'redis'
+redis_url = os.getenv('REDIS_URL')
+if redis_url:
+    try:
+        app.config['SESSION_TYPE'] = 'redis'
+        app.config['SESSION_REDIS'] = redis.from_url(redis_url)
+        print("✓ Using Redis for sessions")
+    except Exception as e:
+        print(f"Redis connection failed: {e}, falling back to filesystem")
+        app.config['SESSION_TYPE'] = 'filesystem'
+        app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+else:
+    print("⚠ REDIS_URL not found, using filesystem sessions")
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'skdex_session:'
-app.config['SESSION_REDIS'] = redis.from_url('redis://127.0.0.1:6379')
 
 db = SQLAlchemy(app)
 sess = Session(app)
@@ -854,4 +869,5 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
