@@ -65,6 +65,12 @@ sess = Session(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USER = os.getenv('EMAIL_USER')
+EMAIL_PASS = os.getenv('EMAIL_PASS')
+SMTP_TIMEOUT = int(os.getenv('SMTP_TIMEOUT', '10'))
+
 login_manager.session_protection = "strong"
 login_manager.login_message_category = "info"       
 
@@ -868,6 +874,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
