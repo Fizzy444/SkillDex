@@ -35,31 +35,6 @@
         position: relative;
       }
 
-      .chat-header {
-        background-color: #007bff;
-        color: white;
-        padding: 15px 20px;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        position: sticky;
-        top: 0;
-        z-index: 50;
-      }
-
-      .chat-header-info h2 {
-        margin: 0;
-        font-size: 1.2em;
-      }
-
-      .chat-header-info p {
-        margin: 2px 0 0;
-        font-size: 0.85em;
-        opacity: 0.9;
-        display: flex;
-        align-items: center;
-      }
-
       .status-dot {
         height: 8px;
         width: 8px;
@@ -116,7 +91,7 @@
         color: #333;
         border-bottom-right-radius: 4px;
       }
-      
+
       .bot-message .message-content {
         background-color: #d0e0f0;
         color: #333;
@@ -181,13 +156,43 @@
           transform: scale(1);
         }
       }
+      .welcome-prompt {
+        position: fixed;
+        left: 50%;
+        top: 35%;
+        transform: translateX(-50%);
+        text-align: center;
+        color: #555;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        opacity: 1;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        z-index: 90;
+        pointer-events: none;
+      }
 
+      .welcome-prompt h2 {
+        margin: 0;
+        font-size: 2.5rem;
+        color: #007bff;
+      }
+
+      .welcome-prompt p {
+        margin: 8px 0 0;
+        font-size: 2rem;
+        color: #777;
+      }
+
+      .welcome-prompt.hidden {
+        opacity: 0;
+        transform: translate(-50%, -10px);
+        pointer-events: none;
+      }
       .input-area {
         position: fixed;
         left: 50%;
         transform: translate(-50%, -50%);
         bottom: unset;
-        top: 50%;
+        top: 60%;
 
         width: 90%;
         max-width: 500px;
@@ -246,7 +251,7 @@
       #userInput {
         width: 100%;
         border: none;
-        padding: 10px 15px;
+        padding: 10px 10px;
         font-size: 1em;
         outline: none;
         resize: none;
@@ -490,30 +495,17 @@
   </head>
   <body>
     <div class="chat-container">
-      <div class="chat-header">
-        <div class="chat-header-info">
-          <h2>Resume Assistant</h2>
-          <p><span class="status-dot"></span>Online • Ready to help</p>
-        </div>
-      </div>
-
       <div class="messages-container" id="messages">
-        <div class="message bot-message">
-          <!-- <div class="message-content">
-            <p>
-              Hello! I'm your resume assistant. I can help you with information
-              about skills, experience, education, projects, and career goals.
-              What would you like to know?
-            </p>
-            <div class="message-time">Just now</div>
-          </div> -->
-        </div>
+        <div class="message bot-message"></div>
       </div>
 
       <div class="typing-indicator" id="typingIndicator">
         <div class="typing-dots"><span></span><span></span><span></span></div>
       </div>
-
+      <div id="welcomePrompt" class="welcome-prompt">
+        <h2>SkillDEX AI</h2>
+        <p>What can I help you with?</p>
+      </div>
       <div class="input-area" id="inputArea">
         <!-- File Preview Section -->
         <div id="filePreviewContainer" style="display: none">
@@ -587,11 +579,11 @@
       const fileName = document.getElementById("fileName");
       const fileSize = document.getElementById("fileSize");
       const removeFileBtn = document.getElementById("removeFileBtn");
-      const inputArea = document.getElementById("inputArea"); // Get the input area container
+      const inputArea = document.getElementById("inputArea"); 
 
       let sessionId = "session_" + Date.now();
       let currentFile = null;
-      let hasInputAreaMoved = false; // New flag to track input area state
+      let hasInputAreaMoved = false; 
 
       function getCurrentMode() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -608,33 +600,6 @@
         }
         console.log("DEBUG: No mode found, defaulting to 'resume'.");
         return "resume";
-      }
-
-      function updateHeaderForMode(mode) {
-        const headerTitle = document.querySelector(".chat-header h2");
-        const headerSubtitle = document.querySelector(".chat-header p");
-
-        switch (mode) {
-          case "urgent":
-            headerTitle.textContent = "Urgent Task Assistant";
-            headerSubtitle.innerHTML =
-              '<span class="status-dot"></span>Online • Ready for urgent tasks';
-            break;
-          case "resume":
-            headerTitle.textContent = "Resume Assistant";
-            headerSubtitle.innerHTML =
-              '<span class="status-dot"></span>Online • Ready to analyze resumes';
-            break;
-          case "interview":
-            headerTitle.textContent = "Interview Coach";
-            headerSubtitle.innerHTML =
-              '<span class="status-dot"></span>Online • Ready for interview practice';
-            break;
-          default:
-            headerTitle.textContent = "General Assistant";
-            headerSubtitle.innerHTML =
-              '<span class="status-dot"></span>Online • How can I help?';
-        }
       }
 
       function updateInitialMessage(mode) {
@@ -662,12 +627,7 @@
       }
 
       const initialMode = getCurrentMode();
-      updateHeaderForMode(initialMode);
-      // The initial message is already in the HTML, no need to update on first load unless modes change.
-      // updateInitialMessage(initialMode);
-      // If you want the initial message to *change* based on URL mode, uncomment the line above.
-      // However, the provided initial message is hardcoded for 'resume' mode, so it's already correct.
-
+      
       function formatFileSize(bytes) {
         if (bytes === 0) return "0 Bytes";
         const k = 1024;
@@ -682,7 +642,7 @@
         userInput.style.height = "auto";
         userInput.style.height = userInput.scrollHeight + "px";
 
-        const maxHeight = 150; // Max height for the textarea
+        const maxHeight = 150; 
         if (userInput.scrollHeight > maxHeight) {
           userInput.style.height = maxHeight + "px";
           userInput.style.overflowY = "auto";
@@ -690,11 +650,9 @@
           userInput.style.overflowY = "hidden";
         }
 
-        // Enable send button if there's text or a file
         const hasText = userInput.value.trim().length > 0;
         sendButton.disabled = !hasText && !currentFile;
 
-        // Add 'active' class to textarea if there's text
         if (hasText) {
           userInput.classList.add("active");
         } else {
@@ -723,8 +681,7 @@
         fileData = null,
         fileType = null,
         isStreaming = false
-      ) {
-        // Ensure the messages container is visible if it's the first message after the input moved
+      ) { 
         if (
           hasInputAreaMoved &&
           messagesContainer.classList.contains("hidden")
@@ -765,7 +722,6 @@
           `;
           }
         } else {
-          // Use marked.parse for both user and bot messages for consistent markdown rendering
           const parsedContent = marked.parse(content);
           messageContentHTML = `<div class="message-text">${parsedContent}${
             isStreaming ? '<span class="streaming-cursor"></span>' : ""
@@ -833,7 +789,7 @@
           console.log("DEBUG: Sending mode to API:", mode);
 
           if (file) {
-            formData.append("image", file); // API expects 'image' field for both images and PDFs
+            formData.append("image", file); 
 
             const allowedTypes = [
               "image/jpeg",
@@ -919,10 +875,24 @@
       }
 
       async function sendMessage() {
+        console.log("🚀 sendMessage() was CALLED!");
+
         const message = userInput.value.trim();
         const file = currentFile;
 
-        if (!message && !file) return;
+        console.log("Message:", JSON.stringify(message));
+        console.log("File:", file ? file.name : "none");
+        console.log("Send button disabled?", sendButton.disabled);
+
+        if (!message && !file) {
+          console.warn("⚠️ No message and no file — aborting send.");
+          return;
+        }
+
+        const welcomePrompt = document.getElementById("welcomePrompt");
+        if (welcomePrompt && !welcomePrompt.classList.contains("hidden")) {
+          welcomePrompt.classList.add("hidden");
+        }
 
         sendButton.disabled = true;
 
@@ -932,45 +902,57 @@
           hasInputAreaMoved = true;
         }
 
-        // Clear input UI immediately
         userInput.value = "";
         hideFilePreview();
         autoResizeTextarea();
 
-        if (file) {
-          const fileType = file.type.startsWith("image/") ? "image" : "pdf";
+        try {
+          if (file) {
+            const fileType = file.type.startsWith("image/") ? "image" : "pdf";
 
-          // Always show file preview in chat (with optional user message)
-          if (fileType === "image") {
-            const reader = new FileReader();
-            reader.onload = async function (e) {
-              // Add message with image preview + user's text (if any)
-              addMessage(message, true, { url: e.target.result }, "image");
-
+            if (fileType === "image") {
+              await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                  try {
+                    addMessage(
+                      message,
+                      true,
+                      { url: e.target.result },
+                      "image"
+                    );
+                    showTyping();
+                    await sendToAPI(message, file);
+                    resolve();
+                  } catch (error) {
+                    reject(error);
+                  }
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+            } else {
+              addMessage(
+                message,
+                true,
+                {
+                  name: file.name,
+                  size: formatFileSize(file.size),
+                },
+                "pdf"
+              );
               showTyping();
-              // Send ONLY the user's message (not "analyze this...") to AI
               await sendToAPI(message, file);
-            };
-            reader.readAsDataURL(file);
-          } else {
-            // PDF preview
-            addMessage(
-              message,
-              true,
-              {
-                name: file.name,
-                size: formatFileSize(file.size),
-              },
-              "pdf"
-            );
-
+            }
+          } else if (message) {
+            addMessage(message, true);
             showTyping();
-            await sendToAPI(message, file);
+            await sendToAPI(message);
           }
-        } else if (message) {
-          addMessage(message, true);
-          showTyping();
-          await sendToAPI(message);
+        } catch (error) {
+          console.error("Error sending message:", error);
+        } finally {
+          sendButton.disabled = false;
         }
       }
 
@@ -996,12 +978,10 @@
             filePreviewImg.style.display = "none";
             pdfPreviewIcon.style.display = "flex";
             filePreviewContainer.style.display = "flex";
-            autoResizeTextarea();
           }
-          sendButton.disabled = false; // Enable send button if a file is selected
+          autoResizeTextarea();
         } else {
           hideFilePreview();
-          autoResizeTextarea();
         }
       });
 
@@ -1016,7 +996,7 @@
         fileName.textContent = "";
         fileSize.textContent = "";
         filePreviewContainer.style.display = "none";
-        autoResizeTextarea(); // Re-evaluate send button state
+        autoResizeTextarea();
       }
 
       sendButton.addEventListener("click", sendMessage);
