@@ -19,14 +19,11 @@ import json
 import redis
 from flask_session import Session
 from prompt import Prompt
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 load_dotenv(override=True)
 google_api_key = os.getenv('GEMINI_API_KEY')
-
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
-EMAIL_USER = os.getenv('EMAIL_USER')
-EMAIL_PASS = os.getenv('EMAIL_PASS')
 
 genai.configure(api_key=google_api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
@@ -44,19 +41,31 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 app.config['SESSION_TYPE'] = 'redis'
 redis_url = os.getenv('REDIS_URL')
-if redis_url:
-    try:
-        app.config['SESSION_TYPE'] = 'redis'
-        app.config['SESSION_REDIS'] = redis.from_url(redis_url)
-        print("✓ Using Redis for sessions")
-    except Exception as e:
-        print(f"Redis connection failed: {e}, falling back to filesystem")
-        app.config['SESSION_TYPE'] = 'filesystem'
-        app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-else:
-    print("⚠ REDIS_URL not found, using filesystem sessions")
+redis_url = os.getenv("REDIS_URL")
+if not redis_url:
+    logger.warning("REDIS_URL not set — using filesystem sessions as fallback.")
     app.config['SESSION_TYPE'] = 'filesystem'
-    app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+    app.config.pop('SESSION_REDIS', None)
+else:
+    try:
+        if redis_url.startswith("rediss://"):
+            redis_client = redis.from_url(
+                redis_url, 
+                ssl=True, 
+                ssl_cert_reqs=None, 
+                decode_responses=True
+            )
+        else:
+            redis_client = redis.from_url(redis_url, decode_responses=True)
+
+        redis_client.ping()
+        logger.info("Connected to Redis successfully.")
+
+        app.config['SESSION_REDIS'] = redis_client
+    except Exception as e:
+        logger.exception("Failed to connect to Redis — falling back to filesystem sessions. Error: %s", e)
+        app.config['SESSION_TYPE'] = 'filesystem'
+        app.config.pop('SESSION_REDIS', None)
 
 app.config['SESSION_PERMANENT'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
@@ -161,15 +170,17 @@ def send_otp_email(email, otp_code, username):
         </html>
         """
         
-        msg.attach(MIMEText(body, 'html'))
-        
-        # Send email
-        server = smtplib.SMTP(EMAIL_HOST, EMAIL_PORT)
-        server.starttls()
-        server.login(EMAIL_USER, EMAIL_PASS)
-        server.send_message(msg)
-        server.quit()
-        
+        message = Mail(
+            from_email=('skilldex.ai@gmail.com'), 
+            to_emails=email,
+            subject='SkillDEX Verification Code',
+            html_content=html_body
+        )
+
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        response = sg.send(message)
+
+        logger.info(f"OTP email sent to {email} via SendGrid (status: {response.status_code})")
         return True
     except Exception as e:
         print(f"Failed to send email: {e}")
@@ -869,5 +880,6 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
