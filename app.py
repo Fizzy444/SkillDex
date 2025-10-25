@@ -38,7 +38,11 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', secrets.token_hex(32))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USER = os.getenv('EMAIL_USER')
+EMAIL_PASS = os.getenv('EMAIL_PASS')
+SMTP_TIMEOUT = int(os.getenv('SMTP_TIMEOUT', '10'))
 app.config['SESSION_TYPE'] = 'redis'
 redis_url = os.getenv('REDIS_URL')
 if redis_url:
@@ -106,27 +110,8 @@ def generate_otp():
     return ''.join(random.choices(string.digits, k=6))
 
 def send_otp_email(email, otp_code, username):
-    """Send OTP email to user"""
+    """Send OTP email using SendGrid"""
     try:
-        if not EMAIL_USER or not EMAIL_PASS:
-            print("Email credentials not configured")
-            return False
-            
-        msg = MIMEMultipart()
-        msg['From'] = EMAIL_USER
-        msg['To'] = email
-        msg['Subject'] = "SkillDEX Verification Code"
-
-        template_path = os.path.join(os.path.dirname(__file__), 'templates', 'email.html')
-        try:
-            with open(template_path, 'r', encoding='utf-8') as f:
-                html_template = f.read()
-        except FileNotFoundError:
-            print(f"Error: Email template not found at {template_path}")
-            return False
-        except Exception as e:
-            print(f"Error reading email template file: {e}")
-            return False
         html_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -134,21 +119,17 @@ def send_otp_email(email, otp_code, username):
                 <h1 style="color: white; margin: 0; font-size: 28px;">SkillDEX</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0;">Your AI Career Companion</p>
             </div>
-            
             <div style="background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <h2 style="color: #374151; margin-top: 0;">Hi {username}!</h2>
                 <p style="color: #6b7280; line-height: 1.6;">Please use the verification code below to complete your action:</p>
-                
                 <div style="background: #f8fafc; border: 2px dashed #e5e7eb; padding: 20px; text-align: center; margin: 25px 0; border-radius: 8px;">
                     <h1 style="color: #4f46e5; font-size: 36px; letter-spacing: 8px; margin: 0; font-family: 'Courier New', monospace;">{otp_code}</h1>
                 </div>
-                
                 <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
                     • This code will expire in <strong>10 minutes</strong><br>
                     • Don't share this code with anyone<br>
                     • If you didn't request this, please ignore this email
                 </p>
-                
                 <hr style="border: none; height: 1px; background: #e5e7eb; margin: 25px 0;">
                 <p style="color: #9ca3af; font-size: 12px; text-align: center;">
                     This is an automated message from SkillDEX. Please do not reply to this email.
@@ -157,13 +138,12 @@ def send_otp_email(email, otp_code, username):
         </body>
         </html>
         """
-        
+
         message = Mail(
-            from_email=('SkillDEX Team', 'skilldex.ai@gmail.com'), 
+            from_email=('skilldex.ai@gmail.com'), 
             to_emails=email,
             subject='SkillDEX Verification Code',
-            html_content=html_body,
-            plain_text_content=plain_text_body
+            html_content=html_body
         )
 
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
@@ -171,6 +151,7 @@ def send_otp_email(email, otp_code, username):
 
         logger.info(f"OTP email sent to {email} via SendGrid (status: {response.status_code})")
         return True
+        
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
@@ -869,6 +850,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
