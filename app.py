@@ -271,7 +271,7 @@ def verify_otp():
             used=False
         ).first()
 
-        if otp_record.expires_at > datetime.now(timezone.utc):
+        if otp_record.expires_at > datetime.now():
             otp_record.used = True
             db.session.commit()
 
@@ -852,6 +852,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
