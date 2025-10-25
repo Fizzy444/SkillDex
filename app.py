@@ -7,7 +7,7 @@ from email.mime.multipart import MIMEMultipart
 import random
 import string
 from datetime import datetime, timedelta, timezone
-
+import logging
 from flask import Flask, render_template, request, jsonify, Response, redirect, url_for, flash, session
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
@@ -24,6 +24,8 @@ from sendgrid.helpers.mail import Mail
 
 load_dotenv(override=True)
 google_api_key = os.getenv('GEMINI_API_KEY')
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 genai.configure(api_key=google_api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
@@ -850,6 +852,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
