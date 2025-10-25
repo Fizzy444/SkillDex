@@ -271,7 +271,13 @@ def verify_otp():
             used=False
         ).first()
 
-        if otp_record.expires_at > datetime.now():
+        if not otp_record:
+            if is_ajax:
+                return jsonify({'error': 'Invalid or expired verification code.'}), 400
+            flash("Invalid or expired verification code. Please try again.", "danger")
+            return redirect(url_for('verify_otp'))
+
+        if otp_record.expires_at > datetime.now(timezone.utc):
             otp_record.used = True
             db.session.commit()
 
@@ -333,13 +339,13 @@ def verify_otp():
                 flash(f"Welcome back, {user.username}!", "success")
                 return redirect(next_page)
         else:
+            # OTP exists but is expired
             if is_ajax:
                 return jsonify({'error': 'Invalid or expired verification code.'}), 400
             flash("Invalid or expired verification code. Please try again.", "danger")
             return redirect(url_for('verify_otp'))
     
     return render_template('otp-verification.html', context=context)
-
 
 @app.route("/resend-otp", methods=["POST"])
 def resend_otp():
@@ -852,6 +858,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
