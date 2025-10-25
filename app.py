@@ -133,7 +133,7 @@ def send_otp_email(email, otp_code, username):
         except Exception as e:
             print(f"Error reading email template file: {e}")
             return False
-        body = f"""
+        html_body = f"""
         <html>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -874,6 +874,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
