@@ -1,557 +1,755 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Resume Assistant</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
-  <style>
-    * {
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Assistant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    html, body {
-        height: 100%;
-        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #f0f2f5;
+        color: #333;
         overflow: hidden;
-    }
+      }
 
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-
-    .chat-container {
-        background: white;
-        width: 100vw;
-        height: 100vh;
+      .chat-container {
         display: flex;
         flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        background-color: #fff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         overflow: hidden;
         position: relative;
-    }
+      }
 
-    .chat-header {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      .chat-header {
+        background-color: #007bff;
         color: white;
-        padding: 20px 30px;
-        text-align: center;
-        position: relative;
-        flex-shrink: 0;
-        z-index: 2;
-    }
-    
-    .chat-header h2 { font-size: 28px; font-weight: 600; margin-bottom: 5px; }
-    .chat-header p { font-size: 16px; opacity: 0.9; }
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
 
-    .status-dot {
+      .chat-header-info h2 {
+        margin: 0;
+        font-size: 1.2em;
+      }
+
+      .chat-header-info p {
+        margin: 2px 0 0;
+        font-size: 0.85em;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+      }
+
+      .status-dot {
+        height: 8px;
+        width: 8px;
+        background-color: #28a745;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+      }
+
+      .messages-container {
+        flex-grow: 1;
+        padding: 20px;
+        overflow-y: auto;
+        scroll-behavior: smooth;
+        background-color: #f9f9f9;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding-bottom: 120px;
+      }
+
+      .messages-container.hidden {
+        display: none;
+      }
+
+      .message {
+        display: flex;
+        margin-bottom: 10px;
+        max-width: 80%;
+      }
+
+      .message.user-message {
+        justify-content: flex-end;
+        margin-left: auto;
+      }
+
+      .message.bot-message {
+        justify-content: flex-start;
+        margin-right: auto;
+      }
+
+      .message-content {
+        padding: 10px 15px;
+        border-radius: 18px;
+        line-height: 1.4;
+        font-size: 0.95em;
+        word-wrap: break-word;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        position: relative;
+      }
+
+      .user-message .message-content {
+        background-color: #e5e5ea;
+        color: #333;
+        border-bottom-right-radius: 4px;
+      }
+      
+      .bot-message .message-content {
+        background-color: #d0e0f0;
+        color: #333;
+        border-bottom-left-radius: 4px;
+      }
+
+      .message-time {
+        font-size: 0.7em;
+        color: #777;
+        text-align: right;
+        margin-top: 5px;
+      }
+      .bot-message .message-time {
+        text-align: left;
+      }
+
+      .typing-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin: 10px 20px;
+        height: 20px;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        position: absolute;
+        bottom: 100px;
+        left: 20px;
+        z-index: 10;
+      }
+
+      .typing-indicator.active {
+        opacity: 1;
+      }
+
+      .typing-dots span {
         display: inline-block;
         width: 8px;
         height: 8px;
-        background: #4ade80;
+        background-color: #ccc;
         border-radius: 50%;
-        margin-right: 8px;
-        animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        margin: 0 2px;
+        animation: bounce 1.4s infinite ease-in-out both;
+      }
 
-    .messages-container {
-        flex: 1;
-        padding: 30px;
-        overflow-y: auto;
-        background: #f8fafc;
-        min-height: 0;
-        scroll-behavior: smooth;
-    }
+      .typing-dots span:nth-child(1) {
+        animation-delay: -0.32s;
+      }
+      .typing-dots span:nth-child(2) {
+        animation-delay: -0.16s;
+      }
+      .typing-dots span:nth-child(3) {
+        animation-delay: 0s;
+      }
 
-    .message {
-        margin-bottom: 25px;
-        display: flex;
-        animation: fadeInUp 0.5s ease;
-    }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes bounce {
+        0%,
+        80%,
+        100% {
+          transform: scale(0);
+        }
+        40% {
+          transform: scale(1);
+        }
+      }
 
-    .bot-message { justify-content: flex-start; }
-    .user-message { justify-content: flex-end; }
+      .input-area {
+        position: fixed;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        bottom: unset;
+        top: 50%;
 
-    .message-content { max-width: 70%; padding: 18px 24px; border-radius: 20px; position: relative; }
-    .bot-message .message-content { background: white; color: #374151; border-bottom-left-radius: 5px; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1); }
-    .user-message .message-content { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-bottom-right-radius: 5px; }
-    .message-time { font-size: 12px; opacity: 0.7; margin-top: 8px; text-align: right; }
-    .bot-message .message-time { text-align: left; }
-
-    .typing-indicator { 
-        display: none; 
-        padding: 15px 20px; 
-        margin: 10px 30px; 
-        background: white; 
-        border-radius: 20px;
-        width: fit-content;
-        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-    }
-    .typing-indicator.active { display: flex; align-items: center; }
-    .typing-dots { display: flex; gap: 4px; }
-    .typing-dots span { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; animation: typing 1.4s infinite; }
-    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
-
-    .input-area {
-        padding: 20px 30px 30px 30px;
-        background: white;
-        border-top: 1px solid #e2e8f0;
-        display: flex;
-        flex-direction: column; 
-        gap: 15px;
-        flex-shrink: 0;
-    }
-
-    .input-row {
-        display: flex;
-        gap: 15px;
-        align-items: flex-end;
-        width: 100%;
-    }
-
-    .textarea-container { flex: 1; position: relative; }
-    .input-area textarea {
-        width: 100%;
-        min-height: 52px;
-        max-height: 200px;
-        padding: 16px 20px;
-        border: 2px solid #e2e8f0;
+        width: 90%;
+        max-width: 500px;
+        background-color: white;
         border-radius: 25px;
-        font-size: 16px;
-        font-family: inherit;
-        outline: none;
-        resize: none;
-        transition: all 0.3s ease;
-        line-height: 1.4;
-        overflow-y: auto;
-    }
-    .input-area textarea:focus { border-color: #4facfe; box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1); }
-    .input-area textarea::placeholder { color: #9ca3af; }
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        padding: 10px 15px;
+        box-sizing: border-box;
+        transition: top 0.7s ease-in-out, transform 0.7s ease-in-out,
+          bottom 0.7s ease-in-out, width 0.7s ease-in-out,
+          max-width 0.7s ease-in-out, padding 0.7s ease-in-out;
+      }
 
-    .send-button, .file-upload-btn {
+      .input-area.moved-down {
+        top: unset;
+        bottom: 15px;
+        transform: translateX(-50%);
+        width: calc(100% - 40px);
+        max-width: 660px;
+        padding: 10px 20px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .input-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+      }
+
+      .file-upload-btn {
+        background-color: #f0f2f5;
+        color: #555;
         border-radius: 50%;
-        width: 52px;
-        height: 52px;
-        cursor: pointer;
+        width: 38px;
+        height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
+        cursor: pointer;
         flex-shrink: 0;
-    }
+        transition: background-color 0.2s ease;
+      }
+      .file-upload-btn:hover {
+        background-color: #e0e0e0;
+      }
 
-    .send-button {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white; border: none; font-size: 20px;
-        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
-    }
-    .send-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4); }
-    .send-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3); }
+      .textarea-container {
+        flex-grow: 1;
+        position: relative;
+        background-color: #f0f2f5;
+        border-radius: 20px;
+        overflow: hidden;
+      }
 
-    .file-upload-btn { background: #f8fafc; border: 2px solid #e2e8f0; color: #64748b; }
-    .file-upload-btn:hover { background: #e0e0e0; border-color: #c0c0c0; }
-
-    #filePreviewContainer {
-        display: flex; 
-        align-items: center; 
-        gap: 10px; 
+      #userInput {
+        width: 100%;
+        border: none;
         padding: 10px 15px;
-        background: #f8fafc;
-        border: 2px dashed #e2e8f0;
-        border-radius: 12px;
-        margin-bottom: 15px; 
-        width: fit-content;
-        max-width: 100%;
-    }
-    
-    .file-preview-content {
+        font-size: 1em;
+        outline: none;
+        resize: none;
+        box-sizing: border-box;
+        background-color: transparent;
+        min-height: 20px;
+        max-height: 150px;
+        overflow-y: hidden;
+      }
+
+      #userInput.active {
+        min-height: 40px;
+      }
+
+      .send-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.2em;
+        flex-shrink: 0;
+        transition: background-color 0.2s ease, opacity 0.2s ease;
+        opacity: 0.6;
+      }
+
+      .send-button:not([disabled]) {
+        opacity: 1;
+        background-color: #007bff;
+      }
+      .send-button:not([disabled]):hover {
+        background-color: #0056b3;
+      }
+
+      /* File Preview Styles */
+      #filePreviewContainer {
+        background-color: #e9f0f9;
+        border-radius: 15px;
+        padding: 10px;
+        margin-bottom: 10px;
         display: flex;
         align-items: center;
         gap: 10px;
-        flex: 1;
-        min-width: 0;
-    }
-    
-    #filePreviewImg { 
-        width: 80px; 
-        height: 80px; 
-        object-fit: cover; 
-        border-radius: 8px; 
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .pdf-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border: 1px solid #d0e0f0;
+        overflow: hidden;
+      }
+
+      .file-preview-content {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+        gap: 10px;
+      }
+
+      #filePreviewImg {
+        max-width: 50px;
+        max-height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .pdf-icon {
+        background-color: #dc3545;
+        color: white;
+        width: 50px;
+        height: 50px;
         border-radius: 8px;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        flex-direction: column;
-        color: white;
         font-weight: bold;
-        font-size: 24px;
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
-    }
-    
-    .pdf-icon-text {
-        font-size: 12px;
-        margin-top: 4px;
-        opacity: 0.9;
-    }
-    
-    .file-info {
-        flex: 1;
+        font-size: 0.8em;
+        line-height: 1;
+      }
+      .pdf-icon span:first-child {
+        font-size: 1.2em;
+      }
+      .pdf-icon-text {
+        font-size: 0.7em;
+        margin-top: 2px;
+      }
+
+      .file-info {
+        flex-grow: 1;
         min-width: 0;
-    }
-    
-    .file-name {
-        font-size: 14px;
-        font-weight: 600;
-        color: #1e293b;
+      }
+
+      .file-name {
+        font-size: 0.9em;
+        font-weight: 500;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
-        margin-bottom: 4px;
-    }
-    
-    .file-size {
-        font-size: 12px;
-        color: #64748b;
-    }
-    
-    #removeFileBtn {
-        background: #ef4444;
-        color: white; 
-        border: none; 
-        border-radius: 50%;
-        width: 32px;
-        height: 32px; 
-        cursor: pointer; 
-        font-size: 20px; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-    }
-    #removeFileBtn:hover {
-        background: #dc2626;
-        transform: scale(1.1);
-    }
+      }
 
-    .uploaded-file { 
-        display: flex; 
-        flex-direction: column; 
-        align-items: flex-end; 
-    }
-    
-    .image-preview { 
-        max-width: 200px; 
-        max-height: 200px; 
-        border-radius: 10px; 
-        margin-bottom: 10px; 
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); 
-    }
-    
-    .pdf-preview {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        margin-bottom: 10px;
-        backdrop-filter: blur(10px);
-    }
-    
-    .pdf-preview-icon {
-        width: 48px;
-        height: 48px;
-        background: white;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        color: #ef4444;
-        font-weight: bold;
-        font-size: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    
-    .pdf-preview-info {
-        flex: 1;
-        color: white;
-    }
-    
-    .pdf-preview-name {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 2px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    .pdf-preview-size {
-        font-size: 12px;
-        opacity: 0.8;
-    }
-    
-    .uploaded-file p { 
-        margin-top: 0; 
-        padding-top: 10px; 
-        border-top: 1px solid rgba(255,255,255,0.2);
-        font-size: 0.9em; 
-        opacity: 0.8;
-    }
+      .file-size {
+        font-size: 0.8em;
+        color: #666;
+      }
 
-    .message-content h1, .message-content h2, .message-content h3 { margin: 15px 0 10px 0; font-weight: 600; }
-    .message-content ul, .message-content ol { margin: 10px 0; padding-left: 20px; }
-    .message-content code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em; }
-    .message-content pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; overflow-x: auto; margin: 15px 0; }
-    .message-content pre code { background: none; padding: 0; }
-    .streaming-cursor { display: inline-block; width: 2px; height: 1em; background: #4facfe; animation: blink 1s infinite; margin-left: 2px; }
-    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-    
-    .messages-container::-webkit-scrollbar {
-        width: 8px;
-    }
-    .messages-container::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .messages-container::-webkit-scrollbar-thumb {
-        background-color: #cbd5e1; 
-        border-radius: 4px; 
+      #removeFileBtn {
+        background: none;
         border: none;
-        transition: background-color .2s ease;
-    }
-    .messages-container::-webkit-scrollbar-thumb:hover {
-        background-color: #a8b6c8;
-    }
+        font-size: 1.5em;
+        color: #999;
+        cursor: pointer;
+        padding: 0 5px;
+        line-height: 1;
+        transition: color 0.2s ease;
+      }
+      #removeFileBtn:hover {
+        color: #333;
+      }
 
-    @media (max-width: 768px) {
-        .chat-header { padding: 15px 20px; }
-        .chat-header h2 { font-size: 24px; }
-        .messages-container { padding: 15px; } 
-        .input-area { padding: 10px 15px 15px 15px; }
-        .message-content { max-width: 90%; padding: 12px 18px; font-size: 15px; }
-        .send-button, .file-upload-btn { width: 48px; height: 48px; }
-        .input-area textarea { padding: 12px 18px; min-height: 48px; font-size: 15px; } 
-        .typing-indicator { margin: 10px 15px; }
-        
-        #filePreviewContainer { margin-bottom: 10px; } 
-        #filePreviewImg, .pdf-icon { width: 60px; height: 60px; }
-        #removeFileBtn { width: 28px; height: 28px; font-size: 16px; }
-    }
+      .uploaded-file {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 10px;
+        background-color: #f8f8f8;
+        margin-bottom: 8px;
+        display: inline-block;
+        text-align: left;
+      }
 
-    @media (max-width: 480px) {
-        .chat-header h2 { font-size: 22px; }
-        .chat-header p { font-size: 14px; }
-        .message-content { max-width: 95%; padding: 10px 15px; font-size: 14px; }
-        .input-row { gap: 10px; }
-        .send-button, .file-upload-btn { width: 44px; height: 44px; font-size: 18px; }
-        .input-area textarea { min-height: 44px; font-size: 14px; }
-    }
-  </style>
-</head>
-<body>
-  <div class="chat-container">
-    <div class="chat-header">
-      <div class="chat-header-info">
-        <h2>Resume Assistant</h2>
-        <p><span class="status-dot"></span>Online • Ready to help</p>
-      </div>
-    </div>
+      .uploaded-file .image-preview {
+        max-width: 150px;
+        max-height: 150px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        display: block;
+      }
 
-    <div class="messages-container" id="messages">
-      <div class="message bot-message">
-        <div class="message-content">
-          <p>Hello! I'm your resume assistant. I can help you with information about skills, experience, education, projects, and career goals. What would you like to know?</p>
-          <div class="message-time">Just now</div>
+      .uploaded-file .pdf-preview {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background-color: #f0f2f5;
+        padding: 8px;
+        border-radius: 10px;
+      }
+
+      .uploaded-file .pdf-preview-icon {
+        background-color: #dc3545;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.7em;
+      }
+      .uploaded-file .pdf-preview-icon span:first-child {
+        font-size: 1.1em;
+      }
+      .uploaded-file .pdf-preview-info {
+        font-size: 0.8em;
+        color: #555;
+        flex-grow: 1;
+      }
+      .uploaded-file .pdf-preview-name {
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .uploaded-file .pdf-preview-size {
+        font-size: 0.7em;
+        color: #888;
+      }
+      .message-text p:last-child {
+        margin-bottom: 0;
+      }
+      .message-text pre {
+        background-color: #2d2d2d;
+        color: #f8f8f2;
+        padding: 10px;
+        border-radius: 8px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .message-text code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        font-size: 0.9em;
+      }
+      .message-text pre code {
+        display: block;
+        padding: 0;
+        background: none;
+        color: inherit;
+      }
+      .message-text .streaming-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.1em;
+        background-color: #333;
+        vertical-align: middle;
+        animation: blink 1s step-end infinite;
+      }
+      @keyframes blink {
+        from,
+        to {
+          background-color: transparent;
+        }
+        50% {
+          background-color: #333;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes slideOut {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <h2>Resume Assistant</h2>
+          <p><span class="status-dot"></span>Online • Ready to help</p>
         </div>
       </div>
-    </div>
 
-    <div class="typing-indicator" id="typingIndicator">
-      <div class="typing-dots"><span></span><span></span><span></span></div>
-    </div>
+      <div class="messages-container" id="messages">
+        <div class="message bot-message">
+          <!-- <div class="message-content">
+            <p>
+              Hello! I'm your resume assistant. I can help you with information
+              about skills, experience, education, projects, and career goals.
+              What would you like to know?
+            </p>
+            <div class="message-time">Just now</div>
+          </div> -->
+        </div>
+      </div>
 
-    <div class="input-area">
-      <!-- File Preview Section -->
-      <div id="filePreviewContainer" style="display:none;">
-        <div class="file-preview-content">
-          <img id="filePreviewImg" src="" alt="Image Preview" style="display:none;"/>
-          <div id="pdfPreviewIcon" class="pdf-icon" style="display:none;">
-            <span>PDF</span>
-            <span class="pdf-icon-text">Document</span>
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+      </div>
+
+      <div class="input-area" id="inputArea">
+        <!-- File Preview Section -->
+        <div id="filePreviewContainer" style="display: none">
+          <div class="file-preview-content">
+            <img
+              id="filePreviewImg"
+              src=""
+              alt="Image Preview"
+              style="display: none"
+            />
+            <div id="pdfPreviewIcon" class="pdf-icon" style="display: none">
+              <span>PDF</span>
+              <span class="pdf-icon-text">Document</span>
+            </div>
+            <div class="file-info">
+              <div class="file-name" id="fileName"></div>
+              <div class="file-size" id="fileSize"></div>
+            </div>
           </div>
-          <div class="file-info">
-            <div class="file-name" id="fileName"></div>
-            <div class="file-size" id="fileSize"></div>
+          <button id="removeFileBtn">&times;</button>
+        </div>
+
+        <div class="input-row">
+          <label
+            for="fileInput"
+            class="file-upload-btn"
+            title="Upload image or PDF"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"
+              />
+            </svg>
+          </label>
+          <input
+            type="file"
+            id="fileInput"
+            accept="image/*,application/pdf,.pdf"
+            style="display: none"
+          />
+          <div class="textarea-container">
+            <textarea
+              id="userInput"
+              placeholder="Ask a question or upload a file..."
+              rows="1"
+            ></textarea>
           </div>
+          <button class="send-button" id="sendButton" disabled>➤</button>
         </div>
-        <button id="removeFileBtn">&times;</button>
-      </div>
-      
-      <div class="input-row">
-        <label for="fileInput" class="file-upload-btn" title="Upload image or PDF">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
-          </svg>
-        </label>
-        <input type="file" id="fileInput" accept="image/*,application/pdf,.pdf" style="display:none"/>
-        <div class="textarea-container">
-          <textarea id="userInput" placeholder="Ask a question or upload a file..." rows="1"></textarea>
-        </div>
-        <button class="send-button" id="sendButton" disabled>➤</button>
       </div>
     </div>
-  </div>
 
-  <script>
-    const messagesContainer = document.getElementById('messages');
-    const userInput = document.getElementById('userInput');
-    const sendButton = document.getElementById('sendButton');
-    const typingIndicator = document.getElementById('typingIndicator');
-    const fileInput = document.getElementById('fileInput');
-    const filePreviewContainer = document.getElementById('filePreviewContainer');
-    const filePreviewImg = document.getElementById('filePreviewImg');
-    const pdfPreviewIcon = document.getElementById('pdfPreviewIcon');
-    const fileName = document.getElementById('fileName');
-    const fileSize = document.getElementById('fileSize');
-    const removeFileBtn = document.getElementById('removeFileBtn');
+    <script>
+      const messagesContainer = document.getElementById("messages");
+      const userInput = document.getElementById("userInput");
+      const sendButton = document.getElementById("sendButton");
+      const typingIndicator = document.getElementById("typingIndicator");
+      const fileInput = document.getElementById("fileInput");
+      const filePreviewContainer = document.getElementById(
+        "filePreviewContainer"
+      );
+      const filePreviewImg = document.getElementById("filePreviewImg");
+      const pdfPreviewIcon = document.getElementById("pdfPreviewIcon");
+      const fileName = document.getElementById("fileName");
+      const fileSize = document.getElementById("fileSize");
+      const removeFileBtn = document.getElementById("removeFileBtn");
+      const inputArea = document.getElementById("inputArea"); // Get the input area container
 
-    let sessionId = 'session_' + Date.now();
-    let currentFile = null;
+      let sessionId = "session_" + Date.now();
+      let currentFile = null;
+      let hasInputAreaMoved = false; // New flag to track input area state
 
-    function getCurrentMode() {
+      function getCurrentMode() {
         const urlParams = new URLSearchParams(window.location.search);
-        const modeFromURL = urlParams.get('mode');
+        const modeFromURL = urlParams.get("mode");
         if (modeFromURL) {
-            sessionStorage.setItem("chatMode", modeFromURL);
-            console.log("DEBUG: Mode set from URL:", modeFromURL);
-            return modeFromURL;
+          sessionStorage.setItem("chatMode", modeFromURL);
+          console.log("DEBUG: Mode set from URL:", modeFromURL);
+          return modeFromURL;
         }
         const modeFromStorage = sessionStorage.getItem("chatMode");
         if (modeFromStorage) {
-            console.log("DEBUG: Mode from storage:", modeFromStorage);
-            return modeFromStorage;
+          console.log("DEBUG: Mode from storage:", modeFromStorage);
+          return modeFromStorage;
         }
         console.log("DEBUG: No mode found, defaulting to 'resume'.");
-        return 'resume'; 
-    }
+        return "resume";
+      }
 
-    function updateHeaderForMode(mode) {
-        const headerTitle = document.querySelector('.chat-header h2');
-        const headerSubtitle = document.querySelector('.chat-header p');
-        
-        switch(mode) {
-            case 'urgent':
-                headerTitle.textContent = 'Urgent Task Assistant';
-                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready for urgent tasks';
-                break;
-            case 'resume':
-                headerTitle.textContent = 'Resume Assistant';
-                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready to analyze resumes';
-                break;
-            case 'interview':
-                headerTitle.textContent = 'Interview Coach';
-                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • Ready for interview practice';
-                break;
-            default:
-                headerTitle.textContent = 'General Assistant';
-                headerSubtitle.innerHTML = '<span class="status-dot"></span>Online • How can I help?';
+      function updateHeaderForMode(mode) {
+        const headerTitle = document.querySelector(".chat-header h2");
+        const headerSubtitle = document.querySelector(".chat-header p");
+
+        switch (mode) {
+          case "urgent":
+            headerTitle.textContent = "Urgent Task Assistant";
+            headerSubtitle.innerHTML =
+              '<span class="status-dot"></span>Online • Ready for urgent tasks';
+            break;
+          case "resume":
+            headerTitle.textContent = "Resume Assistant";
+            headerSubtitle.innerHTML =
+              '<span class="status-dot"></span>Online • Ready to analyze resumes';
+            break;
+          case "interview":
+            headerTitle.textContent = "Interview Coach";
+            headerSubtitle.innerHTML =
+              '<span class="status-dot"></span>Online • Ready for interview practice';
+            break;
+          default:
+            headerTitle.textContent = "General Assistant";
+            headerSubtitle.innerHTML =
+              '<span class="status-dot"></span>Online • How can I help?';
         }
-    }
+      }
 
-    function updateInitialMessage(mode) {
-        const initialMessage = document.querySelector('.bot-message .message-content p');
-        
-        switch(mode) {
-            case 'urgent':
-                initialMessage.textContent = 'Hello! I\'m your urgent task assistant. I can help you prioritize and tackle your most pressing tasks. What urgent matter can I help you with?';
-                break;
-            case 'resume':
-                initialMessage.textContent = 'Hello! I\'m your resume assistant. I can help you with information about skills, experience, education, projects, and career goals. Upload your resume or ask me anything!';
-                break;
-            case 'interview':
-                initialMessage.textContent = 'Hello! I\'m your interview coach. I can help you practice common interview questions, improve your answers, and boost your confidence. Ready to practice?';
-                break;
-            default: 
-                initialMessage.textContent = 'Hello! I\'m a general assistant. How can I help you today?';
+      function updateInitialMessage(mode) {
+        const initialMessage = document.querySelector(
+          ".bot-message .message-content p"
+        );
+
+        switch (mode) {
+          case "urgent":
+            initialMessage.textContent =
+              "Hello! I'm your urgent task assistant. I can help you prioritize and tackle your most pressing tasks. What urgent matter can I help you with?";
+            break;
+          case "resume":
+            initialMessage.textContent =
+              "Hello! I'm your resume assistant. I can help you with information about skills, experience, education, projects, and career goals. Upload your resume or ask me anything!";
+            break;
+          case "interview":
+            initialMessage.textContent =
+              "Hello! I'm your interview coach. I can help you practice common interview questions, improve your answers, and boost your confidence. Ready to practice?";
+            break;
+          default:
+            initialMessage.textContent =
+              "Hello! I'm a general assistant. How can I help you today?";
         }
-    }
+      }
 
-    const initialMode = getCurrentMode(); 
-    updateHeaderForMode(initialMode);
-    updateInitialMessage(initialMode);
+      const initialMode = getCurrentMode();
+      updateHeaderForMode(initialMode);
+      // The initial message is already in the HTML, no need to update on first load unless modes change.
+      // updateInitialMessage(initialMode);
+      // If you want the initial message to *change* based on URL mode, uncomment the line above.
+      // However, the provided initial message is hardcoded for 'resume' mode, so it's already correct.
 
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
         const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const sizes = ["Bytes", "KB", "MB", "GB"];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-    }
-
-    function autoResizeTextarea() {
-      userInput.style.height = 'auto'; 
-      userInput.style.height = userInput.scrollHeight + 'px';
-      
-      const maxHeight = 200;
-      if (userInput.scrollHeight > maxHeight) {
-        userInput.style.height = maxHeight + 'px';
-        userInput.style.overflowY = 'auto';
-      } else {
-        userInput.style.overflowY = 'hidden'; 
+        return (
+          Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i]
+        );
       }
-      
-      const hasText = userInput.value.trim().length > 0;
-      sendButton.disabled = !hasText && !currentFile;
-    }
 
-    userInput.addEventListener('input', autoResizeTextarea);
-    userInput.addEventListener('paste', () => {
-      setTimeout(autoResizeTextarea, 10);
-    });
+      function autoResizeTextarea() {
+        userInput.style.height = "auto";
+        userInput.style.height = userInput.scrollHeight + "px";
 
-    userInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        if (e.shiftKey) {
-          return;
+        const maxHeight = 150; // Max height for the textarea
+        if (userInput.scrollHeight > maxHeight) {
+          userInput.style.height = maxHeight + "px";
+          userInput.style.overflowY = "auto";
         } else {
-          e.preventDefault();
-          sendMessage();
+          userInput.style.overflowY = "hidden";
+        }
+
+        // Enable send button if there's text or a file
+        const hasText = userInput.value.trim().length > 0;
+        sendButton.disabled = !hasText && !currentFile;
+
+        // Add 'active' class to textarea if there's text
+        if (hasText) {
+          userInput.classList.add("active");
+        } else {
+          userInput.classList.remove("active");
         }
       }
-    });
 
-    function addMessage(content, isUser = false, fileData = null, fileType = null, isStreaming = false) {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+      userInput.addEventListener("input", autoResizeTextarea);
+      userInput.addEventListener("paste", () => {
+        setTimeout(autoResizeTextarea, 10);
+      });
 
-      let messageContentHTML = '';
-      if (fileData && isUser) {
-        if (fileType === 'image') {
-          messageContentHTML = `
+      userInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+
+          if (!sendButton.disabled) {
+            sendMessage();
+          }
+        }
+      });
+
+      function addMessage(
+        content,
+        isUser = false,
+        fileData = null,
+        fileType = null,
+        isStreaming = false
+      ) {
+        // Ensure the messages container is visible if it's the first message after the input moved
+        if (
+          hasInputAreaMoved &&
+          messagesContainer.classList.contains("hidden")
+        ) {
+          messagesContainer.classList.remove("hidden");
+        }
+
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${
+          isUser ? "user-message" : "bot-message"
+        }`;
+
+        let messageContentHTML = "";
+        if (fileData && isUser) {
+          if (fileType === "image") {
+            messageContentHTML = `
             <div class="uploaded-file">
-              <img src="${fileData.url}" alt="Uploaded image" class="image-preview">
-              ${content ? `<p>${content}</p>` : ''}
+              <img src="${
+                fileData.url
+              }" alt="Uploaded image" class="image-preview">
+              ${content ? `<p>${content}</p>` : ""}
             </div>
           `;
-        } else if (fileType === 'pdf') {
-          messageContentHTML = `
+          } else if (fileType === "pdf") {
+            messageContentHTML = `
             <div class="uploaded-file">
               <div class="pdf-preview">
                 <div class="pdf-preview-icon">
@@ -562,278 +760,356 @@
                   <div class="pdf-preview-size">${fileData.size}</div>
                 </div>
               </div>
-              ${content ? `<p>${content}</p>` : ''}
+              ${content ? `<p>${content}</p>` : ""}
             </div>
           `;
+          }
+        } else {
+          // Use marked.parse for both user and bot messages for consistent markdown rendering
+          const parsedContent = marked.parse(content);
+          messageContentHTML = `<div class="message-text">${parsedContent}${
+            isStreaming ? '<span class="streaming-cursor"></span>' : ""
+          }</div>`;
         }
-      } else {
-        const parsedContent = isUser ? content : marked.parse(content);
-        messageContentHTML = `<div class="message-text">${parsedContent}${isStreaming ? '<span class="streaming-cursor"></span>' : ''}</div>`;
-      }
 
-      messageDiv.innerHTML = `
+        messageDiv.innerHTML = `
         <div class="message-content">
           ${messageContentHTML}
-          <div class="message-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+          <div class="message-time">${new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</div>
         </div>
       `;
-      messagesContainer.appendChild(messageDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-      if (!isUser && !isStreaming) {
-        messageDiv.querySelectorAll('pre code').forEach(block => {
-          hljs.highlightElement(block);
-        });
-      }
-      return messageDiv;
-    }
-
-    function updateStreamingMessage(messageElement, content, isComplete = false) {
-      const messageTextDiv = messageElement.querySelector('.message-text');
-      if (messageTextDiv) { 
-        const parsedContent = marked.parse(content);
-        messageTextDiv.innerHTML = `${parsedContent}${isComplete ? '' : '<span class="streaming-cursor"></span>'}`;
-
-        if (isComplete) {
-          messageElement.querySelectorAll('pre code').forEach(block => {
+        if (!isUser && !isStreaming) {
+          messageDiv.querySelectorAll("pre code").forEach((block) => {
             hljs.highlightElement(block);
           });
         }
+        return messageDiv;
       }
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
 
-    function showTyping(){ typingIndicator.classList.add('active'); messagesContainer.scrollTop = messagesContainer.scrollHeight; }
-    function hideTyping(){ typingIndicator.classList.remove('active'); }
+      function updateStreamingMessage(
+        messageElement,
+        content,
+        isComplete = false
+      ) {
+        const messageTextDiv = messageElement.querySelector(".message-text");
+        if (messageTextDiv) {
+          const parsedContent = marked.parse(content);
+          messageTextDiv.innerHTML = `${parsedContent}${
+            isComplete ? "" : '<span class="streaming-cursor"></span>'
+          }`;
 
-    async function sendToAPI(message, file = null) {
-      try {
-        const formData = new FormData();
-        formData.append('message', message);
-        formData.append('session_id', sessionId);
-        formData.append('stream', 'true');
-        
-        const mode = getCurrentMode(); 
-        formData.append('mode', mode); 
-        console.log("DEBUG: Sending mode to API:", mode);
-
-        if (file) {
-          formData.append('image', file);
-          
-          const allowedTypes = ['image/jpeg','image/jpg','image/png','image/gif','image/bmp','image/webp','application/pdf'];
-          if (!allowedTypes.includes(file.type.toLowerCase())) {
-            throw new Error(`Unsupported file type: ${file.type}`);
-          }
-          if (file.size > 16 * 1024 * 1024) {
-            throw new Error('File too large. Maximum size is 16MB.');
+          if (isComplete) {
+            messageElement.querySelectorAll("pre code").forEach((block) => {
+              hljs.highlightElement(block);
+            });
           }
         }
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
 
-        const response = await fetch('/chat_api', { method: 'POST', body: formData });
-        if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+      function showTyping() {
+        typingIndicator.classList.add("active");
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      function hideTyping() {
+        typingIndicator.classList.remove("active");
+      }
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let botMessageElement = null, finalResponse = '';
+      async function sendToAPI(message, file = null) {
+        try {
+          const formData = new FormData();
+          formData.append("message", message);
+          formData.append("session_id", sessionId);
+          formData.append("stream", "true");
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+          const mode = getCurrentMode();
+          formData.append("mode", mode);
+          console.log("DEBUG: Sending mode to API:", mode);
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const jsonData = line.slice(6).trim();
-              if (jsonData === '[DONE]') {
-                if (botMessageElement) updateStreamingMessage(botMessageElement, finalResponse, true);
-                return finalResponse;
-              }
-              try {
-                const data = JSON.parse(jsonData);
-                if (data.accumulated) {
-                  finalResponse = data.accumulated;
-                  if (!botMessageElement) {
-                    botMessageElement = addMessage(finalResponse, false, null, null, true);
-                  } else {
-                    updateStreamingMessage(botMessageElement, finalResponse, false);
-                  }
-                }
-              } catch(e){ console.warn('Invalid JSON in stream:', jsonData); }
+          if (file) {
+            formData.append("image", file); // API expects 'image' field for both images and PDFs
+
+            const allowedTypes = [
+              "image/jpeg",
+              "image/jpg",
+              "image/png",
+              "image/gif",
+              "image/bmp",
+              "image/webp",
+              "application/pdf",
+            ];
+            if (!allowedTypes.includes(file.type.toLowerCase())) {
+              throw new Error(`Unsupported file type: ${file.type}`);
+            }
+            if (file.size > 16 * 1024 * 1024) {
+              throw new Error("File too large. Maximum size is 16MB.");
             }
           }
-        }
-        return finalResponse || "No complete response received.";
-      } catch (error) {
-        console.error('API Error:', error);
-        addMessage(error.message || "Error processing request.", false);
-        return "";
-      } finally {
-        hideTyping();
-      }
-    }
 
-    async function sendMessage() {
-      const message = userInput.value.trim();
-      const file = currentFile;
-      if (!message && !file) return;
+          const response = await fetch("/chat_api", {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) throw new Error(`HTTP error ${response.status}`);
 
-      if (file) {
-        const fileType = file.type.startsWith('image/') ? 'image' : 'pdf';
-        
-        if (fileType === 'image') {
-          const reader = new FileReader();
-          reader.onload = async function(e) {
-            addMessage(message || "Image uploaded for analysis", true, {url: e.target.result}, 'image');
-            userInput.value = '';
-            hideFilePreview();
-            autoResizeTextarea();
-            showTyping();
-            await sendToAPI(message || "Please analyze this image", file);
-          };
-          reader.readAsDataURL(file);
-        } else {
-          addMessage(message || "PDF uploaded for analysis", true, {
-            name: file.name,
-            size: formatFileSize(file.size)
-          }, 'pdf');
-          userInput.value = '';
-          hideFilePreview();
-          autoResizeTextarea();
-          showTyping();
-          await sendToAPI(message || "Please analyze this PDF document", file);
-        }
-      } else if (message) {
-        addMessage(message, true);
-        userInput.value = '';
-        autoResizeTextarea();
-        showTyping();
-        await sendToAPI(message);
-      }
-      sendButton.disabled = true;
-    }
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let botMessageElement = null,
+            finalResponse = "";
 
-    fileInput.addEventListener('change', function() {
-      if (this.files && this.files[0]) {
-        const file = this.files[0];
-        currentFile = file;
-        
-        fileName.textContent = file.name;
-        fileSize.textContent = formatFileSize(file.size);
-        
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            filePreviewImg.src = e.target.result;
-            filePreviewImg.style.display = 'block';
-            pdfPreviewIcon.style.display = 'none';
-            filePreviewContainer.style.display = 'flex';
-            autoResizeTextarea();
-          };
-          reader.readAsDataURL(file);
-        } else if (file.type === 'application/pdf') {
-          filePreviewImg.style.display = 'none';
-          pdfPreviewIcon.style.display = 'flex';
-          filePreviewContainer.style.display = 'flex';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const jsonData = line.slice(6).trim();
+                if (jsonData === "[DONE]") {
+                  if (botMessageElement)
+                    updateStreamingMessage(
+                      botMessageElement,
+                      finalResponse,
+                      true
+                    );
+                  return finalResponse;
+                }
+                try {
+                  const data = JSON.parse(jsonData);
+                  if (data.accumulated) {
+                    finalResponse = data.accumulated;
+                    if (!botMessageElement) {
+                      botMessageElement = addMessage(
+                        finalResponse,
+                        false,
+                        null,
+                        null,
+                        true
+                      );
+                    } else {
+                      updateStreamingMessage(
+                        botMessageElement,
+                        finalResponse,
+                        false
+                      );
+                    }
+                  }
+                } catch (e) {
+                  console.warn("Invalid JSON in stream:", jsonData);
+                }
+              }
+            }
+          }
+          return finalResponse || "No complete response received.";
+        } catch (error) {
+          console.error("API Error:", error);
+          addMessage(error.message || "Error processing request.", false);
+          return "";
+        } finally {
+          hideTyping();
           autoResizeTextarea();
         }
-      } else {
+      }
+
+      async function sendMessage() {
+        const message = userInput.value.trim();
+        const file = currentFile;
+
+        if (!message && !file) return;
+
+        sendButton.disabled = true;
+
+        if (!hasInputAreaMoved) {
+          inputArea.classList.add("moved-down");
+          messagesContainer.classList.remove("hidden");
+          hasInputAreaMoved = true;
+        }
+
+        // Clear input UI immediately
+        userInput.value = "";
         hideFilePreview();
         autoResizeTextarea();
-      }
-    });
 
-    removeFileBtn.addEventListener('click', hideFilePreview);
+        if (file) {
+          const fileType = file.type.startsWith("image/") ? "image" : "pdf";
 
-    function hideFilePreview() {
-      fileInput.value = '';
-      currentFile = null;
-      filePreviewImg.src = '';
-      filePreviewImg.style.display = 'none';
-      pdfPreviewIcon.style.display = 'none';
-      fileName.textContent = '';
-      fileSize.textContent = '';
-      filePreviewContainer.style.display = 'none';
-      autoResizeTextarea();
-    }
+          // Always show file preview in chat (with optional user message)
+          if (fileType === "image") {
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+              // Add message with image preview + user's text (if any)
+              addMessage(message, true, { url: e.target.result }, "image");
 
-    sendButton.addEventListener('click', sendMessage);
+              showTyping();
+              // Send ONLY the user's message (not "analyze this...") to AI
+              await sendToAPI(message, file);
+            };
+            reader.readAsDataURL(file);
+          } else {
+            // PDF preview
+            addMessage(
+              message,
+              true,
+              {
+                name: file.name,
+                size: formatFileSize(file.size),
+              },
+              "pdf"
+            );
 
-    userInput.focus();
-    autoResizeTextarea();
-
-    window.getCurrentMode = getCurrentMode;
-
-    function extractTodoItems(text) {
-      console.log('=== CHECKING FOR TODO ITEMS ===');
-      console.log('Full text:', text);
-      
-      const regex = /\[ADD_TO_TODO\]([\s\S]*?)\[\/ADD_TO_TODO\]/g;
-      const matches = [];
-      let match;
-      
-      while ((match = regex.exec(text)) !== null) {
-        console.log('Found match:', match[0]);
-        console.log('JSON part:', match[1]);
-        try {
-          const jsonStr = match[1].trim();
-          const data = JSON.parse(jsonStr);
-          if (data.skill) {
-            console.log('Parsed successfully:', data);
-            matches.push(data);
+            showTyping();
+            await sendToAPI(message, file);
           }
-        } catch (e) {
-          console.error('Failed to parse TODO JSON:', match[1], e);
+        } else if (message) {
+          addMessage(message, true);
+          showTyping();
+          await sendToAPI(message);
         }
       }
-      
-      console.log('Total matches found:', matches.length);
-      return matches;
-    }
 
-    function cleanResponseText(text) {
-      return text.replace(/\[ADD_TO_TODO\][\s\S]*?\[\/ADD_TO_TODO\]/g, '').trim();
-    }
+      fileInput.addEventListener("change", function () {
+        if (this.files && this.files[0]) {
+          const file = this.files[0];
+          currentFile = file;
 
-    async function addToTodoList(skill, reason, priority) {
-      try {
-        console.log('Adding to todo:', {skill, reason, priority});
-        const response = await fetch('/api/tasks/from-chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: skill,
-            reason: reason,
-            priority: priority || 'high'
-          })
-        });
+          fileName.textContent = file.name;
+          fileSize.textContent = formatFileSize(file.size);
 
-        const result = await response.json();
-        console.log('API response:', result);
-        
-        if (result.success) {
-          showNotification(`✓ Added "${skill}" to your to-do list!`, 'success');
-          return true;
+          if (file.type.startsWith("image/")) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              filePreviewImg.src = e.target.result;
+              filePreviewImg.style.display = "block";
+              pdfPreviewIcon.style.display = "none";
+              filePreviewContainer.style.display = "flex";
+              autoResizeTextarea();
+            };
+            reader.readAsDataURL(file);
+          } else if (file.type === "application/pdf") {
+            filePreviewImg.style.display = "none";
+            pdfPreviewIcon.style.display = "flex";
+            filePreviewContainer.style.display = "flex";
+            autoResizeTextarea();
+          }
+          sendButton.disabled = false; // Enable send button if a file is selected
         } else {
-          showNotification('Failed: ' + (result.error || 'Unknown error'), 'error');
+          hideFilePreview();
+          autoResizeTextarea();
+        }
+      });
+
+      removeFileBtn.addEventListener("click", hideFilePreview);
+
+      function hideFilePreview() {
+        fileInput.value = "";
+        currentFile = null;
+        filePreviewImg.src = "";
+        filePreviewImg.style.display = "none";
+        pdfPreviewIcon.style.display = "none";
+        fileName.textContent = "";
+        fileSize.textContent = "";
+        filePreviewContainer.style.display = "none";
+        autoResizeTextarea(); // Re-evaluate send button state
+      }
+
+      sendButton.addEventListener("click", sendMessage);
+
+      userInput.focus();
+      autoResizeTextarea();
+
+      window.getCurrentMode = getCurrentMode;
+
+      function extractTodoItems(text) {
+        console.log("=== CHECKING FOR TODO ITEMS ===");
+        console.log("Full text:", text);
+
+        const regex = /\[ADD_TO_TODO\]([\s\S]*?)\[\/ADD_TO_TODO\]/g;
+        const matches = [];
+        let match;
+
+        while ((match = regex.exec(text)) !== null) {
+          console.log("Found match:", match[0]);
+          console.log("JSON part:", match[1]);
+          try {
+            const jsonStr = match[1].trim();
+            const data = JSON.parse(jsonStr);
+            if (data.skill) {
+              console.log("Parsed successfully:", data);
+              matches.push(data);
+            }
+          } catch (e) {
+            console.error("Failed to parse TODO JSON:", match[1], e);
+          }
+        }
+
+        console.log("Total matches found:", matches.length);
+        return matches;
+      }
+
+      function cleanResponseText(text) {
+        return text
+          .replace(/\[ADD_TO_TODO\][\s\S]*?\[\/ADD_TO_TODO\]/g, "")
+          .trim();
+      }
+
+      async function addToTodoList(skill, reason, priority) {
+        try {
+          console.log("Adding to todo:", { skill, reason, priority });
+          const response = await fetch("/api/tasks/from-chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              text: skill,
+              reason: reason,
+              priority: priority || "high",
+            }),
+          });
+
+          const result = await response.json();
+          console.log("API response:", result);
+
+          if (result.success) {
+            showNotification(
+              `✓ Added "${skill}" to your to-do list!`,
+              "success"
+            );
+            return true;
+          } else {
+            showNotification(
+              "Failed: " + (result.error || "Unknown error"),
+              "error"
+            );
+            return false;
+          }
+        } catch (error) {
+          console.error("Error adding to todo:", error);
+          showNotification("Network error", "error");
           return false;
         }
-      } catch (error) {
-        console.error('Error adding to todo:', error);
-        showNotification('Network error', 'error');
-        return false;
       }
-    }
 
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.style.cssText = `
+      function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        notification.style.cssText = `
         position: fixed;
         top: 80px;
         right: 20px;
-        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        background: ${
+          type === "success"
+            ? "#10b981"
+            : type === "error"
+            ? "#ef4444"
+            : "#3b82f6"
+        };
         color: white;
         padding: 16px 24px;
         border-radius: 12px;
@@ -843,19 +1119,19 @@
         max-width: 350px;
         font-size: 14px;
       `;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-      }, 4000);
-    }
+        notification.textContent = message;
+        document.body.appendChild(notification);
 
-    if (!document.getElementById('notificationStyles')) {
-      const style = document.createElement('style');
-      style.id = 'notificationStyles';
-      style.textContent = `
+        setTimeout(() => {
+          notification.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => notification.remove(), 300);
+        }, 4000);
+      }
+
+      if (!document.getElementById("notificationStyles")) {
+        const style = document.createElement("style");
+        style.id = "notificationStyles";
+        style.textContent = `
         @keyframes slideIn {
           from { transform: translateX(400px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
@@ -865,31 +1141,39 @@
           to { transform: translateX(400px); opacity: 0; }
         }
       `;
-      document.head.appendChild(style);
-    }
-
-    const originalUpdateStreamingMessage = updateStreamingMessage;
-    updateStreamingMessage = function(messageElement, content, isComplete = false) {
-      const cleanedContent = cleanResponseText(content);
-      originalUpdateStreamingMessage(messageElement, cleanedContent, isComplete);
-      
-      if (isComplete) {
-        console.log('Stream complete, checking for todos...');
-        const todoItems = extractTodoItems(content);
-        if (todoItems.length > 0) {
-          console.log('Processing', todoItems.length, 'todo items');
-          todoItems.forEach((item, index) => {
-            setTimeout(() => {
-              addToTodoList(item.skill, item.reason, item.priority);
-            }, 500 * (index + 1));
-          });
-        } else {
-          console.log('No TODO items found in response');
-        }
+        document.head.appendChild(style);
       }
-    };
 
-    console.log('TODO integration script loaded with PDF support');
-  </script>
-</body>
+      const originalUpdateStreamingMessage = updateStreamingMessage;
+      updateStreamingMessage = function (
+        messageElement,
+        content,
+        isComplete = false
+      ) {
+        const cleanedContent = cleanResponseText(content);
+        originalUpdateStreamingMessage(
+          messageElement,
+          cleanedContent,
+          isComplete
+        );
+
+        if (isComplete) {
+          console.log("Stream complete, checking for todos...");
+          const todoItems = extractTodoItems(content);
+          if (todoItems.length > 0) {
+            console.log("Processing", todoItems.length, "todo items");
+            todoItems.forEach((item, index) => {
+              setTimeout(() => {
+                addToTodoList(item.skill, item.reason, item.priority);
+              }, 500 * (index + 1));
+            });
+          } else {
+            console.log("No TODO items found in response");
+          }
+        }
+      };
+
+      console.log("TODO integration script loaded with PDF support");
+    </script>
+  </body>
 </html>
