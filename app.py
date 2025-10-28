@@ -815,7 +815,7 @@ def too_large(e):
 @app.route("/debug/session")
 @login_required
 def debug_session():
-    if current_user.email != "skilldex.ai@gmail.com":
+    if current_user.email != "mr.mithun2521@gmail.com":
         return jsonify({"error": "Access denied"}), 403
     return jsonify({
         'session': dict(session),
@@ -826,7 +826,7 @@ def debug_session():
 @app.route("/debug/users")
 @login_required
 def debug_users():
-    if current_user.email != "skilldex.ai@gmail.com":
+    if current_user.email != "mr.mithun2521@gmail.com":
         return jsonify({"error": "Access denied"}), 403
     users = User.query.all()
     users_data = [{'id': u.id, 'email': u.email, 'is_verified': u.is_verified} for u in users]
@@ -835,7 +835,7 @@ def debug_users():
 @app.route("/debug/tasks")
 @login_required
 def debug_tasks():
-    if current_user.email != "skilldex.ai@gmail.com":
+    if current_user.email != "mr.mithun2521@gmail.com":
         return jsonify({"error": "Access denied"}), 403
     tasks = Task.query.all()
     tasks_data = [
@@ -858,6 +858,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
