@@ -97,7 +97,7 @@ class Task(db.Model):
     priority = db.Column(db.String(10), default='medium', nullable=False) 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
-    
+
     user = db.relationship('User', backref=db.backref('tasks', lazy=True, cascade='all, delete-orphan'))
 
 @login_manager.user_loader
@@ -153,11 +153,11 @@ def send_otp_email(email, otp_code, username):
 
         logger.info(f"OTP email sent to {email} via SendGrid (status: {response.status_code})")
         return True
-        
+
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
-    
+
 @app.route("/")
 def home():
     if current_user.is_authenticated:
@@ -171,29 +171,29 @@ def register():
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form.get('confirm_password')
-        
+
         if len(username) < 3:
             flash("Username must be at least 3 characters long.", "danger")
             return render_template('reg-log.html', form_type="register")
-        
+
         if len(password) < 6:
             flash("Password must be at least 6 characters long.", "danger")
             return render_template('reg-log.html', form_type="register")
-            
+
         if password != confirm_password:
             flash("Passwords do not match.", "danger")
             return render_template('reg-log.html', form_type="register")
-        
+
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash("Email already registered. Please use a different email or login.", "danger")
             return render_template('reg-log.html', form_type="register")
-            
+
         existing_username = User.query.filter_by(username=username).first()
         if existing_username:
             flash("Username already taken. Please choose a different username.", "danger")
             return render_template('reg-log.html', form_type="register")
-        
+
         hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
         session['pending_registration'] = {
             'username': username,
@@ -224,13 +224,13 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-    
+
     if request.method == "POST":
         email = request.form['email']
         password = request.form['password']
-        
+
         user = User.query.filter_by(email=email).first()
-        
+
         if user and bcrypt.check_password_hash(user.password, password):
             if not user.is_verified:
                 flash("Your account is not verified. Please check your email for the OTP.", "warning")
@@ -238,15 +238,15 @@ def login():
             else:
                 login_user(user, remember=True)
                 next_page = request.args.get('next') or url_for('dashboard')
-                
+
                 print(f"Login successful for {user.email}, redirecting to {next_page}")
                 print(f"User authenticated: {current_user.is_authenticated}")
-                
+
                 return redirect(next_page)
         else:
             flash("Invalid email or password. Please try again.", "danger")
             return render_template('reg-log.html', form_type="login")
-    
+
     return render_template('reg-log.html', form_type="login")
 
 @app.route("/verify-otp", methods=["GET", "POST"])
@@ -264,7 +264,7 @@ def verify_otp():
 
     if request.method == "POST":
         entered_otp = (request.json.get('otp') if request.is_json else request.form.get('otp', '')).strip()
-        
+
         otp_record = OTP.query.filter_by(
             email=email,
             otp_code=entered_otp,
@@ -288,7 +288,7 @@ def verify_otp():
                         return jsonify({'error': 'Registration session expired.', 'redirect_url': url_for('register')}), 400
                     flash("Registration session expired. Please register again.", "danger")
                     return redirect(url_for('register'))
-                
+
                 new_user = User(
                             username=reg_data['username'], 
                             email=reg_data['email'], 
@@ -302,7 +302,7 @@ def verify_otp():
                 session.pop('pending_registration', None)
                 session.pop('otp_email', None)
                 session.pop('verification_context', None)
-                
+
                 if is_ajax:
                      return jsonify({
                         'success': True, 
@@ -320,14 +320,14 @@ def verify_otp():
                         return jsonify({'error': 'Login session expired.', 'redirect_url': url_for('login')}), 400
                     flash("Login session expired. Please log in again.", "danger")
                     return redirect(url_for('login'))
-                
+
                 user = db.session.get(User, user_id)
                 login_user(user)
 
                 session.pop('pending_user_id', None)
                 session.pop('otp_email', None)
                 session.pop('verification_context', None)
-                
+
                 next_page = request.args.get('next') or url_for('dashboard')
                 if is_ajax:
                     return jsonify({
@@ -344,7 +344,7 @@ def verify_otp():
                 return jsonify({'error': 'Invalid or expired verification code.'}), 400
             flash("Invalid or expired verification code. Please try again.", "danger")
             return redirect(url_for('verify_otp'))
-    
+
     return render_template('otp-verification.html', context=context)
 
 @app.route("/resend-otp", methods=["POST"])
@@ -362,16 +362,16 @@ def resend_otp():
         user = User.query.filter_by(email=email).first()
         if user:
             username = user.username
-    
+
     otp_code = generate_otp()
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=10)
-    
+
     OTP.query.filter_by(email=email, used=False).delete()
-    
+
     otp_record = OTP(email=email, otp_code=otp_code, expires_at=expires_at)
     db.session.add(otp_record)
     db.session.commit()
-    
+
     if send_otp_email(email, otp_code, username):
         return jsonify({"message": "A new verification code has been sent."})
     else:
@@ -458,20 +458,20 @@ def chat_api():
                     # For PDFs, create a proper file-like object with mime_type
                     import tempfile
                     import google.generativeai as genai
-                    
+
                     # Save to temporary file
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
                         temp_file.write(file_bytes)
                         temp_path = temp_file.name
-                    
+
                     # Upload file to Gemini
                     uploaded_pdf = genai.upload_file(temp_path, mime_type="application/pdf")
                     file_part = uploaded_pdf
-                    
+
                     # Clean up temp file
                     import os
                     os.unlink(temp_path)
-                    
+
                     print(f"PDF uploaded successfully: {uploaded_pdf.uri}")
                 else:
                     return jsonify({"error": "Unexpected file type after validation."}), 400
@@ -557,7 +557,7 @@ def get_tasks():
     try:
         tasks = Task.query.filter_by(user_id=current_user.id).order_by(Task.created_at.desc()).all()
         tasks_data = []
-        
+
         for task in tasks:
             tasks_data.append({
                 'id': task.id,
@@ -567,7 +567,7 @@ def get_tasks():
                 'createdAt': task.created_at.strftime('%Y-%m-%d %H:%M'),
                 'updatedAt': task.updated_at.strftime('%Y-%m-%d %H:%M')
             })
-        
+
         return jsonify({'tasks': tasks_data})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -578,30 +578,30 @@ def add_task():
     """Add a new task"""
     try:
         data = request.get_json()
-        
+
         if not data or 'text' not in data:
             return jsonify({'error': 'Task text is required'}), 400
-        
+
         task_text = data['text'].strip()
         if len(task_text) == 0:
             return jsonify({'error': 'Task text cannot be empty'}), 400
-        
+
         if len(task_text) > 200:
             return jsonify({'error': 'Task text is too long (max 200 characters)'}), 400
-        
+
         priority = data.get('priority', 'medium')
         if priority not in ['low', 'medium', 'high']:
             priority = 'medium'
-        
+
         new_task = Task(
             user_id=current_user.id,
             text=task_text,
             priority=priority
         )
-        
+
         db.session.add(new_task)
         db.session.commit()
-        
+
         return jsonify({
             'id': new_task.id,
             'text': new_task.text,
@@ -610,31 +610,8 @@ def add_task():
             'createdAt': new_task.created_at.strftime('%Y-%m-%d %H:%M'),
             'updatedAt': new_task.updated_at.strftime('%Y-%m-%d %H:%M')
         }), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
-@login_required
-def delete_task(task_id):
-    """Delete a task"""
-    try:
-        print(f"Delete request for task {task_id} by user {current_user.id}")  # ADD THIS
-        task = Task.query.filter_by(id=task_id, user_id=current_user.id).first()
-
-        if not task:
-            print(f"Task {task_id} not found for user {current_user.id}")  # ADD THIS
-            return jsonify({'error': 'Task not found'}), 404
-
-        db.session.delete(task)
-        db.session.commit()
-        print(f"Task {task_id} deleted successfully")  # ADD THIS
-
-        return jsonify({'message': 'Task deleted successfully'})
 
     except Exception as e:
-        print(f"Error deleting task: {str(e)}")  # ADD THIS
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
@@ -644,15 +621,15 @@ def update_task(task_id):
     """Update a task (toggle completion, edit text, etc.)"""
     try:
         task = Task.query.filter_by(id=task_id, user_id=current_user.id).first()
-        
+
         if not task:
             return jsonify({'error': 'Task not found'}), 404
-        
+
         data = request.get_json()
-        
+
         if 'completed' in data:
             task.completed = bool(data['completed'])
-        
+
         if 'text' in data:
             new_text = data['text'].strip()
             if len(new_text) == 0:
@@ -660,13 +637,13 @@ def update_task(task_id):
             if len(new_text) > 200:
                 return jsonify({'error': 'Task text is too long (max 200 characters)'}), 400
             task.text = new_text
-        
+
         if 'priority' in data and data['priority'] in ['low', 'medium', 'high']:
             task.priority = data['priority']
-        
+
         task.updated_at = datetime.now(timezone.utc)
         db.session.commit()
-        
+
         return jsonify({
             'id': task.id,
             'text': task.text,
@@ -675,7 +652,26 @@ def update_task(task_id):
             'createdAt': task.created_at.strftime('%Y-%m-%d %H:%M'),
             'updatedAt': task.updated_at.strftime('%Y-%m-%d %H:%M')
         })
-        
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+@login_required
+def delete_task(task_id):
+    """Delete a task"""
+    try:
+        task = Task.query.filter_by(id=task_id, user_id=current_user.id).first()
+
+        if not task:
+            return jsonify({'error': 'Task not found'}), 404
+
+        db.session.delete(task)
+        db.session.commit()
+
+        return jsonify({'message': 'Task deleted successfully'})
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -688,19 +684,19 @@ def get_task_stats():
         total_tasks = Task.query.filter_by(user_id=current_user.id).count()
         completed_tasks = Task.query.filter_by(user_id=current_user.id, completed=True).count()
         active_tasks = total_tasks - completed_tasks
-        
+
         today = datetime.now(timezone.utc).date()
         today_tasks = Task.query.filter_by(user_id=current_user.id).filter(
             db.func.date(Task.created_at) == today
         ).count()
-        
+
         return jsonify({
             'total': total_tasks,
             'active': active_tasks,
             'completed': completed_tasks,
             'today': today_tasks
         })
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -712,15 +708,15 @@ def bulk_task_operations():
         data = request.get_json()
         operation = data.get('operation')
         task_ids = data.get('task_ids', [])
-        
+
         if not operation or not task_ids:
             return jsonify({'error': 'Operation and task_ids are required'}), 400
-        
+
         tasks = Task.query.filter(
             Task.id.in_(task_ids),
             Task.user_id == current_user.id
         ).all()
-        
+
         if operation == 'mark_completed':
             for task in tasks:
                 task.completed = True
@@ -734,10 +730,10 @@ def bulk_task_operations():
                 db.session.delete(task)
         else:
             return jsonify({'error': 'Invalid operation'}), 400
-        
+
         db.session.commit()
         return jsonify({'message': f'Bulk {operation} completed successfully'})
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -747,34 +743,34 @@ def bulk_task_operations():
 def add_task_from_chat():
     try:
         data = request.get_json()
-        
+
         if not data or 'text' not in data:
             return jsonify({'error': 'Task text is required'}), 400
-        
+
         task_text = data['text'].strip()
         if len(task_text) == 0:
             return jsonify({'error': 'Task text cannot be empty'}), 400
-        
+
         if len(task_text) > 200:
             return jsonify({'error': 'Task text is too long (max 200 characters)'}), 400
-        
+
         priority = data.get('priority', 'high')
         if priority not in ['low', 'medium', 'high']:
             priority = 'high'
-        
+
         reason = data.get('reason', '')
         if reason:
             task_text = f"{task_text} ({reason[:50]})"
-        
+
         new_task = Task(
             user_id=current_user.id,
             text=task_text,
             priority=priority
         )
-        
+
         db.session.add(new_task)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'task': {
@@ -785,7 +781,7 @@ def add_task_from_chat():
                 'createdAt': new_task.created_at.strftime('%Y-%m-%d %H:%M')
             }
         }), 201
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -801,7 +797,7 @@ def logout():
 @app.route("/health")
 def health_check():
     return jsonify({"status": "healthy", "gemini_configured": bool(google_api_key)})
-    
+
 @app.errorhandler(404)
 def not_found_error(error):
     return jsonify({"error": "Endpoint not found"}), 404
@@ -819,7 +815,7 @@ def too_large(e):
 @app.route("/debug/session")
 @login_required
 def debug_session():
-    if current_user.email != "mr.mithun2521@gmail.com":
+        if current_user.email != "mr.mithun2521@gmail.com":
         return jsonify({"error": "Access denied"}), 403
     return jsonify({
         'session': dict(session),
@@ -830,7 +826,7 @@ def debug_session():
 @app.route("/debug/users")
 @login_required
 def debug_users():
-    if current_user.email != "mr.mithun2521@gmail.com":
+        if current_user.email != "mr.mithun2521@gmail.com":
         return jsonify({"error": "Access denied"}), 403
     users = User.query.all()
     users_data = [{'id': u.id, 'email': u.email, 'is_verified': u.is_verified} for u in users]
@@ -839,7 +835,7 @@ def debug_users():
 @app.route("/debug/tasks")
 @login_required
 def debug_tasks():
-    if current_user.email != "mr.mithun2521@gmail.com":
+        if current_user.email != "mr.mithun2521@gmail.com":
         return jsonify({"error": "Access denied"}), 403
     tasks = Task.query.all()
     tasks_data = [
@@ -862,18 +858,3 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
