@@ -615,6 +615,29 @@ def add_task():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+@login_required
+def delete_task(task_id):
+    """Delete a task"""
+    try:
+        print(f"Delete request for task {task_id} by user {current_user.id}")  # ADD THIS
+        task = Task.query.filter_by(id=task_id, user_id=current_user.id).first()
+
+        if not task:
+            print(f"Task {task_id} not found for user {current_user.id}")  # ADD THIS
+            return jsonify({'error': 'Task not found'}), 404
+
+        db.session.delete(task)
+        db.session.commit()
+        print(f"Task {task_id} deleted successfully")  # ADD THIS
+
+        return jsonify({'message': 'Task deleted successfully'})
+
+    except Exception as e:
+        print(f"Error deleting task: {str(e)}")  # ADD THIS
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route("/api/tasks/<int:task_id>", methods=["PUT"])
 @login_required
 def update_task(task_id):
@@ -858,6 +881,7 @@ if __name__ == '__main__':
         db.create_all()
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
 
 
 
