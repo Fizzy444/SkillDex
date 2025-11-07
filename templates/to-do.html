@@ -706,7 +706,7 @@
                 throw new Error(errorData.error || `HTTP ${response.status}: Failed to delete task`);
             }
 
-            tasks = tasks.filter(task => task.id != taskId);
+            tasks = tasks.filter(task => task.id !== taskId);
             renderTasks();
             updateStats();
             showMessage('Task deleted successfully!', 'success');
@@ -834,3 +834,4 @@
 </script>
 </body>
 </html>
+
