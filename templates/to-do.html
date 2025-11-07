@@ -35,7 +35,34 @@
             margin-bottom: 10px;
             font-weight: 700;
         }
+        .back-button-fixed {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #7370e3 0%, #0059ff 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
 
+        .back-button-fixed:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .back-button-fixed svg {
+            width: 18px;
+            height: 18px;
+        }
         .header p {
             font-size: 1.1rem;
             opacity: 0.9;
@@ -445,6 +472,7 @@
     </style>
 </head>
 <body>
+    <a href="/dashboard" class="back-button-fixed"> <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/> </svg> </a>
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-tasks"></i> To-Do List</h1>
@@ -834,4 +862,5 @@
 </script>
 </body>
 </html>
+
 
