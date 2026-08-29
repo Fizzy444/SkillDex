@@ -22,6 +22,7 @@ from prompt import Prompt
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
+
 load_dotenv(override=True)
 google_api_key = os.getenv('GEMINI_API_KEY')
 logging.basicConfig(level=logging.INFO)
